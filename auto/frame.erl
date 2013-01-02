@@ -7,7 +7,7 @@
 %%%-------------------------------------------------------------------
 -module(frame).
 
--include_lib("inets/src/httpd.hrl").
+-include_lib("inets/src/http_server/httpd.hrl").
 %-compile(export_all).
 -export([init/0, do/1, loop/5]).
 
