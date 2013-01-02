@@ -1,4 +1,0 @@
-pasture
-=======
-
-Erlang projekt - avfunk
