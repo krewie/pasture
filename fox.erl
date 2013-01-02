@@ -1,0 +1,3 @@
+-module(fox).
+-extends(animal).
+-exports([print_name/0]).

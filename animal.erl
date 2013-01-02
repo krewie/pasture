@@ -1,0 +1,3 @@
+-module(animal).
+-extends(creature).
+-exports([print_name/0]).
