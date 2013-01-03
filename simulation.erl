@@ -1,5 +1,5 @@
 -module(simulation).
--export([field/1, put_fences/2]).
+-export([field/1, put_fences/2,trav_ets/0]).
 
 put_fences(Size,0) -> 
 	ets:insert(grid, {{0,0}, spawn(fun fence:loop/0)}),
@@ -14,7 +14,7 @@ put_fences(Size, Iter) ->
 	put_fences(Size, Iter-1).
 
 field(Size) -> 
-	ets:new(grid, [set, named_table]),
+	ets:new(grid, [named_table]),
 	put_fences(Size-1, Size-2).
 
 create_animals(Animals) ->
@@ -40,6 +40,13 @@ init([Size, Animals, Plants]) ->
 generate_message(Module, Coordinate) ->
     %% komma på nåt sätt att generera ett meddelande? %%
     {self(), ?MODULE, {Module, Coordinate}}.
+
+%% traverserar och applicerar funktionen fun på alla inlägg i ets : grid %%
+%% spec:en till foldl kräver att 'Accin' defineras, skall användas om tabellen är tom %%
+trav_ets() -> ets:foldl(fun({{X,Y}, PID}, Accin) ->
+				io:format("process ~p with Coordinate X : ~p Y : ~p ~n", [PID, X, Y]),
+				Accin end, notused, grid).
+
 
 step() ->
     %% traversera ets på nåt sätt? %%
