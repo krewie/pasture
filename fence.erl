@@ -4,7 +4,7 @@
 
 loop() ->
 	receive 
-		_ ->
-			io:format("I am a fence with PID : ~p~n", [self()]),
+		{PID, _} ->
+			PID ! {self(), ?MODULE, coordinate},
 			loop()
 		end.
