@@ -1,3 +1,2 @@
 -module(grass).
 -extends(plant).
--export([print_name/0]).

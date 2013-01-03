@@ -1,3 +1,2 @@
 -module(plant).
 -extends(creature).
--export([print_name/0]).
