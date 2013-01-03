@@ -43,8 +43,8 @@ generate_message(Module, Coordinate) ->
 
 %% traverserar och applicerar funktionen fun på alla inlägg i ets : grid %%
 %% spec:en till foldl kräver att 'Accin' defineras, skall användas om tabellen är tom %%
-trav_ets() -> ets:foldl(fun({{X,Y}, PID}, Accin) ->
-				io:format("process ~p with Coordinate X : ~p Y : ~p ~n", [PID, X, Y]),
+trav_ets(Message) -> ets:foldl(fun({{X,Y}, PID}, Accin) ->
+				PID ! {self(), Message},
 				Accin end, notused, grid).
 
 
