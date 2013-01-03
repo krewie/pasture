@@ -1,3 +1,3 @@
 -module(animal).
 -extends(creature).
--export([print_name/0]).
+
