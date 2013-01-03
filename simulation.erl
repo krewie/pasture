@@ -16,3 +16,43 @@ put_fences(Size, Iter) ->
 field(Size) -> 
 	ets:new(grid, [set, named_table]),
 	put_fences(Size-1, Size-2).
+
+create_animals(Animals) ->
+    io:format("Want to create ~p animals ~n", [Animals]).
+
+create_plants(Plants) ->
+    io:format("Want to create ~p plants ~n", [Plants]).
+
+
+init() ->
+    %%lägga till spawnade object också %%
+    field(50),
+    create_animals(4),
+    create_plants(6).
+
+init([Size, Animals, Plants]) ->
+    field(Size),
+    create_animals(Animals),
+    create_plants(Plants),
+    step().
+
+
+generate_message(Module, Coordinate) ->
+    %% komma på nåt sätt att generera ett meddelande? %%
+    {self(), ?MODULE, {Module, Coordinate}}.
+
+step() ->
+    %% traversera ets på nåt sätt? %%
+    loop().
+
+
+loop() ->
+    receive
+	{Pid, Module, Coordinate} ->
+	    Message = generate_message(Module, Coordinate),
+	    Pid ! Message,
+	    loop();
+	_ -> loop()
+    after 1000 ->
+	    step()	
+    end.
