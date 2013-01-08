@@ -1,2 +1,3 @@
 -module(rabbit).
 -extends(animal).
+

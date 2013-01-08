@@ -1,25 +1,25 @@
 -module(simulation).
--export([field/1, put_fences/2,trav_ets/1, init/0, init/1]).
-
+-export([field/2, put_fences/3,trav_ets/1, init/0, init/1]).
+-define(HEIGHT, 20).
+-define(WIDTH, 40). %% t
+-define(PUT_OBJECT(Object, X, Y), ets:insert(grid, {{X, Y}, spawn(Object, loop, [[Object, {X, Y}]])})).
 %%  -------------------  %%
 %% Initieringsfunktioner %%
 %%  -------------------  %%
 
-put_fences(Size,0) -> 
-	ets:insert(grid, {{0,0}, spawn(fence, loop, [[fence, {0,0}]])}),
-	ets:insert(grid, {{0,Size}, spawn(fence, loop, [[fence, {0, Size}]])}),
-	ets:insert(grid, {{Size,0}, spawn(fence, loop, [[fence, {Size, 0}]])}),
-	ets:insert(grid, {{Size,Size}, spawn(fence, loop, [[fence, {Size, Size}]])});
-put_fences(Size, Iter) ->
-	ets:insert(grid, {{Iter,0}, spawn(fence, loop, [[fence, {Iter, 0}]])}),
-	ets:insert(grid, {{0,Iter}, spawn(fence, loop, [[fence, {0, Iter}]])}),
-	ets:insert(grid, {{Iter,Size}, spawn(fence, loop, [[fence, {Iter, Size}]])}),
-	ets:insert(grid, {{Size,Iter}, spawn(fence, loop, [[fence, {Size, Iter}]])}),
-	put_fences(Size, Iter-1).
+put_fences(_H,0,0) -> ?PUT_OBJECT(fence,0,0);
+put_fences(Height,0,Width) -> 
+        ?PUT_OBJECT(fence, Width, 0),
+        ?PUT_OBJECT(fence, Width, Height),
+        put_fences(Height, 0, Width-1);
+put_fences(Height,Acc,Width) ->
+    ?PUT_OBJECT(fence, 0, Acc),
+    ?PUT_OBJECT(fence, Width, Acc),
+    put_fences(Height, Acc-1, Width).
 
-field(Size) -> 
+field(Height, Width) -> 
 	ets:new(grid, [named_table]),
-	put_fences(Size-1, Size-2).
+	put_fences(Height-1, Height-1, Width-1).
 
 create_animals(Animals) ->
     io:format("Want to create ~p animals ~n", [Animals]).
@@ -30,17 +30,17 @@ create_plants(Plants) ->
 
 init() ->
     %%lägga till spawnade object också %%
-    frame ! {set_w, 20},
-    frame ! {set_h, 20},
-    field(20),
+    frame ! {set_w, ?WIDTH},
+    frame ! {set_h, ?HEIGHT},
+    field(?HEIGHT, ?WIDTH),
     create_animals(4),
     create_plants(6),
     step().
 
-init([Size, Animals, Plants]) ->
-    frame ! {set_w, Size},
-    frame ! {set_h, Size},
-    field(Size),
+init([Height, Width, Animals, Plants]) ->
+    frame ! {set_w, Width},
+    frame ! {set_h, Height},
+    field(Height, Width),
     create_animals(Animals),
     create_plants(Plants),
     step().
