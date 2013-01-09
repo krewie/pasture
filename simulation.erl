@@ -1,8 +1,9 @@
 -module(simulation).
--export([field/2, put_fences/3,trav_ets/1, init/0, init/1]).
+-export([field/2, put_fences/3,trav_ets/1, init/0, init/1, reginit/0]).
 -define(HEIGHT, 20).
 -define(WIDTH, 40). %% t
--define(PUT_OBJECT(Object, X, Y), ets:insert(grid, {{X, Y}, spawn(Object, loop, [[Object, {X, Y}]])})).
+-define(PUT_OBJECT(Object, X, Y), ets:insert(grid, {{X, Y}, spawn(Object, init, [{X, Y}])})).
+-define(LOOKUP(X, Y), ets:lookup(grid, {X, Y})).
 %%  -------------------  %%
 %% Initieringsfunktioner %%
 %%  -------------------  %%
@@ -27,6 +28,8 @@ create_animals(Animals) ->
 create_plants(Plants) ->
     io:format("Want to create ~p plants ~n", [Plants]).
 
+reginit() ->
+    register(simulator, spawn(simulation, init, [])).
 
 init() ->
     %%lägga till spawnade object också %%
@@ -35,7 +38,7 @@ init() ->
     field(?HEIGHT, ?WIDTH),
     create_animals(4),
     create_plants(6),
-    step().
+    step.
 
 init([Height, Width, Animals, Plants]) ->
     frame ! {set_w, Width},
@@ -52,19 +55,26 @@ generate_message(Module, Coordinate) ->
 
 %% traverserar och applicerar funktionen fun på alla inlägg i ets : grid %%
 %% spec:en till foldl kräver att 'Accin' defineras, skall användas om tabellen är tom %%
-trav_ets(Message) -> ets:foldl(fun({{X,Y}, PID}, Accin) ->
+trav_ets(Message) -> ets:foldl(fun({{_X,_Y}, PID}, Accin) ->
 				PID ! {self(), Message},
 				Accin end, notused, grid).
 
 
 step() ->
     %% traversera ets på nåt sätt? %%
-    trav_ets(step),
+    trav_ets({tick}),
     loop().
 
 
 loop() ->
     receive
+    {reproduce, PID, Module, {X, Y}} -> 
+        case ?LOOKUP(X, Y) of
+            [] -> ?PUT_OBJECT(Module, X, Y),
+                PID ! {reproduction_ok};
+            _ -> 
+                PID ! {reproduction_error}
+        end;
 	{Pid, Module, Coordinate} ->
 	    Message = generate_message(Module, Coordinate),
 	    Pid ! Message,

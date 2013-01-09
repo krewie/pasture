@@ -1,18 +1,21 @@
 -module(object).
--export([print_name/0, loop/1]).
+-export([get_neighbors/1, get_first_empty/1]).
 -define(CELL, "black").
-
-print_name() ->
-    io:format("MODULE : ~p~n", [?MODULE]).
-
-loop(State) ->
-    [Type, {X, Y}] = State,
-    receive
-	_ ->
-	    io:format("I am a ~p at X: ~p Y: ~p with PID: ~p~n", [Type, X, Y, self()]),
-	    frame ! {change_cell, X, Y, ?CELL},
-	    loop(State)
-    end.
-		      
+-define(LOOKUP(X, Y), ets:lookup(grid, {X, Y})).
 
 
+% retreive the adjecent areas of X, Y.
+% returns it as a list of tuples, structured as {{X-coordinate, Y-coordinate}, Object}
+get_neighbors({X, Y}) ->
+	[{{X-1, Y-1}, ?LOOKUP(X-1, Y-1)}, {{X, Y-1}, ?LOOKUP(X, Y-1)}, {{X+1, Y-1}, ?LOOKUP(X+1, Y-1) }, 
+	 	{{X-1, Y},?LOOKUP(X-1, Y)},					 			   	  {{X+1, Y},?LOOKUP(X+1, Y)},
+	 {{X-1, Y+1}, ?LOOKUP(X-1, Y+1)}, {{X, Y+1}, ?LOOKUP(X, Y+1)}, {{X+1, Y+1}, ?LOOKUP(X+1, Y+1)}].
+
+
+% retreives the the first coordinate with no object from a list of Coordinate-Object-Tuples
+% if all coordinates in list are occupied, return none.
+get_first_empty([])-> none;
+get_first_empty([{Coordinate, []}|_T]) ->
+	Coordinate;
+get_first_empty([{_Coordinate, _}|T]) ->
+	get_first_empty(T).

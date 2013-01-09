@@ -1,6 +1,19 @@
 -module(fence).
--extends(object).
--export([print_name/0]).
+-extend(object).
+-export([init/1]).
+-define(CELL, "black").
 
-print_name() ->
-    io:format("MODULE : ~p~n", [?MODULE]).
+
+init(Coordinate) ->
+	loop(Coordinate).
+
+tick(Coordinate) ->
+	{X, Y} = Coordinate,
+	frame ! {change_cell, X, Y, ?CELL}.
+
+loop(Coordinate) ->
+	receive
+		{tick} -> tick(Coordinate),
+		loop(Coordinate);
+		_ -> loop(Coordinate)
+	end.
