@@ -1,29 +1,10 @@
 -module(grass).
 -extends(object).
 -behaviour(plant).
--export([loop/1, init/1, get_neighbors/1, get_first_empty/1]).
+-export([loop/1, init/1]).
 -define(REPRODUCTION, 1).
 -define(LOOKUP(X, Y), ets:lookup(grid, {X, Y})).
 -define(CELL, "green").
-
-%% Object %%
-% retreive the adjecent areas of X, Y.
-% returns it as a list of tuples, structured as {{X-coordinate, Y-coordinate}, Object}
-get_neighbors({X, Y}) ->
-	[{{X-1, Y-1}, ?LOOKUP(X-1, Y-1)}, {{X, Y-1}, ?LOOKUP(X, Y-1)}, {{X+1, Y-1}, ?LOOKUP(X+1, Y-1) }, 
-	 	{{X-1, Y},?LOOKUP(X-1, Y)},					 			   	  {{X+1, Y},?LOOKUP(X+1, Y)},
-	 {{X-1, Y+1}, ?LOOKUP(X-1, Y+1)}, {{X, Y+1}, ?LOOKUP(X, Y+1)}, {{X+1, Y+1}, ?LOOKUP(X+1, Y+1)}].
-
-
-% retreives the the first coordinate with no object from a list of Coordinate-Object-Tuples
-% if all coordinates in list are occupied, return none.
-get_first_empty([])-> none;
-get_first_empty([{Coordinate, []}|_T]) ->
-	Coordinate;
-get_first_empty([{_Coordinate, _}|T]) ->
-	get_first_empty(T).
-
-
 
 
 init(Coordinate) ->
@@ -41,8 +22,8 @@ tick(State) ->
 %% Tries to reproduce by asking simulator to spawn object at currently empty coordinate.
 %% Not sure if we att the current case (grass) need to know the result of the reproduction.
 reproduce(Coordinate) ->
-	Neighbors = get_neighbors(Coordinate),
-	Rep_Coor = get_first_empty(Neighbors),
+	Neighbors = grass:get_neighbors(Coordinate),
+	Rep_Coor = grass:get_first_empty(Neighbors),
 	case Rep_Coor of 
 		none -> 
 			error;
