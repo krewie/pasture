@@ -24,22 +24,6 @@ tick(State) ->
 %% Not sure if we att the current case (grass) need
 %% to know the result of the reproduction.
 reproduce(Coordinate) ->
-<<<<<<< HEAD
-    Neighbors = grass:get_neighbors(Coordinate),
-    Rep_Coor = grass:get_first_empty(Neighbors),
-    case Rep_Coor of 
-        none -> 
-            error;
-        {X, Y} -> 
-            simulator ! {reproduce, self(), ?MODULE, {X, Y}}
-    end,
-    receive
-        {reproduction_ok} ->
-            ok;
-        {reproduction_error} ->
-            error
-    end.
-=======
 	Neighbors = grass:get_neighbors(Coordinate),
 	Rep_Coor = grass:get_first_empty(Neighbors),
 	case Rep_Coor of 
@@ -54,7 +38,6 @@ reproduce(Coordinate) ->
 		{reproduction_error} ->
 			reproduce(Coordinate)
 	end.
->>>>>>> ...
 
 loop({Coordinate, 0}) ->
     reproduce(Coordinate),
