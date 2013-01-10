@@ -1,5 +1,5 @@
--module(simulation).
--export([field/2, put_fences/3,trav_ets/1, init/0, init/1, reginit/0]).
+-module(simulator).
+-export([field/2, put_fences/3,trav_ets/1, init/0, setup/1]).
 -define(HEIGHT, 20).
 -define(WIDTH, 40).
 -define(PUT_OBJECT(Object, X, Y),
@@ -29,19 +29,15 @@ create_animals(Animals) ->
 create_plants(Plants) ->
     io:format("Want to create ~p plants ~n", [Plants]).
 
-reginit() ->
-    register(simulator, spawn(simulation, init, [])).
 
 init() ->
     %%lägga till spawnade object också %%
-    frame ! {set_w, ?WIDTH},
-    frame ! {set_h, ?HEIGHT},
-    field(?HEIGHT, ?WIDTH),
-    create_animals(4),
-    create_plants(6),
-    step.
+    io:format("Init simulator~n",[]),
+    register(simulator, 
+             spawn_link(simulator, setup, [[?HEIGHT, ?WIDTH, 4, 6]])).
 
-init([Height, Width, Animals, Plants]) ->
+
+setup([Height, Width, Animals, Plants]) ->
     frame ! {set_w, Width},
     frame ! {set_h, Height},
     field(Height, Width),
@@ -58,7 +54,7 @@ generate_message(Module, Coordinate) ->
 %% spec:en till foldl kräver att 'Accin' defineras, skall användas om tabellen
 %% är tom %%
 trav_ets(Message) -> ets:foldl(fun({{_X,_Y}, PID}, Accin) ->
-				PID ! {self(), Message},
+				PID ! Message,
 				Accin end, notused, grid).
 
 
@@ -76,7 +72,8 @@ loop() ->
                 PID ! {reproduction_ok};
             _ -> 
                 PID ! {reproduction_error}
-        end;
+        end,
+        loop();
 	{Pid, Module, Coordinate} ->
 	    Message = generate_message(Module, Coordinate),
 	    Pid ! Message,
