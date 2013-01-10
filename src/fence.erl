@@ -5,15 +5,15 @@
 
 
 init(Coordinate) ->
-	loop(Coordinate).
+    loop(Coordinate).
 
 tick(Coordinate) ->
-	{X, Y} = Coordinate,
-	frame ! {change_cell, X, Y, ?CELL}.
+    {X, Y} = Coordinate,
+    frame ! {change_cell, X, Y, ?CELL}.
 
 loop(Coordinate) ->
-	receive
-		{tick} -> tick(Coordinate),
-		loop(Coordinate);
-		_ -> tick(Coordinate)
-	end.
+    receive
+        {tick} -> tick(Coordinate),
+                  loop(Coordinate);
+        _ -> tick(Coordinate)
+    end.
