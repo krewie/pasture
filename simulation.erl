@@ -1,8 +1,9 @@
 -module(simulation).
 -export([field/2, put_fences/3,trav_ets/1, init/0, init/1, reginit/0]).
 -define(HEIGHT, 20).
--define(WIDTH, 40). %% t
--define(PUT_OBJECT(Object, X, Y), ets:insert(grid, {{X, Y}, spawn(Object, init, [{X, Y}])})).
+-define(WIDTH, 40).
+-define(PUT_OBJECT(Object, X, Y),
+        ets:insert(grid, {{X, Y}, spawn(Object, init, [{X, Y}])})).
 -define(LOOKUP(X, Y), ets:lookup(grid, {X, Y})).
 %%  -------------------  %%
 %% Initieringsfunktioner %%
@@ -54,7 +55,8 @@ generate_message(Module, Coordinate) ->
     {self(), ?MODULE, {Module, Coordinate}}.
 
 %% traverserar och applicerar funktionen fun på alla inlägg i ets : grid %%
-%% spec:en till foldl kräver att 'Accin' defineras, skall användas om tabellen är tom %%
+%% spec:en till foldl kräver att 'Accin' defineras, skall användas om tabellen
+%% är tom %%
 trav_ets(Message) -> ets:foldl(fun({{_X,_Y}, PID}, Accin) ->
 				PID ! {self(), Message},
 				Accin end, notused, grid).
