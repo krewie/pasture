@@ -1,5 +1,5 @@
 -module(object).
--export([get_neighbors/1, get_first_empty/1, get_neighbours/2]).
+-export([get_neighbors/1, get_neighbours/2, get_first_empty/1, get_all_empty/1, get_random/1]).
 -define(LOOKUP(X, Y), ets:lookup(grid, {X, Y})).
 
 
@@ -48,3 +48,18 @@ get_first_empty([{Coordinate, []}|_T]) ->
 	Coordinate;
 get_first_empty([{_Coordinate, _}|T]) ->
 	get_first_empty(T).
+
+
+get_all_empty(List) -> 
+    get_all_empty(List, []).
+get_all_empty([], Acc) -> Acc;
+get_all_empty([{Coordinate, []}|T], Acc) ->
+    get_all_empty(T, [Coordinate|Acc]);
+get_all_empty([{_Coordinate, _}|T], Acc) ->
+    get_all_empty(T, Acc).
+
+
+get_random(List) ->
+    N = length(List),
+    Random = random:uniform(N),
+    lists:nth(Random, List).  

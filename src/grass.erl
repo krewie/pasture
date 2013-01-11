@@ -25,7 +25,8 @@ tick(State) ->
 %% to know the result of the reproduction.
 reproduce(Coordinate) ->
 	Neighbors = grass:get_neighbors(Coordinate),
-	Rep_Coor = grass:get_first_empty(Neighbors),
+    Empty = grass:get_all_empty(Neighbors),
+	Rep_Coor = grass:get_random(Empty),
 	case Rep_Coor of 
 		none -> 
 			error;
