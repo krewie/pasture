@@ -1,11 +1,10 @@
 -module(rabbit).
 -extends(animal).
 -define(CELL, "yellow").
--define(DEF, "white").
 -define(REPRO_RATE, 6).
--define(HUNGER, 3).
+-define(HUNGER, 18).
 -define(REPRO_AGE, 3).
--define(SPEED, 1).
+-define(SPEED, 2).
 -export([init/1]).
 
 init({X, Y}) ->
@@ -27,7 +26,6 @@ move(Coordinate) ->
             simulator ! {move, self(), ?MODULE, Coordinate, Coor},
             receive
                 {move_ok} ->
-                    frame ! {change_cell, OldX, OldY, ?DEF},
                     frame ! {change_cell, X, Y, ?CELL},
                     Coor;
                 {move_error} -> move(Coordinate)
@@ -35,21 +33,18 @@ move(Coordinate) ->
     end.
 
 
-loop(_, _, ?HUNGER, _, _) -> dead;
+loop({X, Y}, _, ?HUNGER, _, _) ->
+    simulator ! {kill, {X, Y}};
 loop(_Coordinate, _Speed, _Hunger, _Age, 0) when _Age >= ?REPRO_AGE ->
     %can eat? then reproduce and/or move/flee else move/flee
     ok;
 loop(Coordinate, ?SPEED, Hunger, Age, Rate) ->
     receive
         {tick} ->
-            loop(move(Coordinate), 0, Hunger, Age+1, Rate)
+            loop(move(Coordinate), 0, Hunger+1, Age+1, Rate)
     end;
 loop(Coordinate, Speed, Hunger, Age, Rate) ->
     receive
         {tick} ->
-            loop(Coordinate, Speed+1, Hunger, Age, Rate)
+            loop(Coordinate, Speed+1, Hunger+1, Age, Rate)
     end.
-
-                                               
-
-    
