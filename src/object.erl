@@ -58,7 +58,7 @@ get_all_empty([{Coordinate, []}|T], Acc) ->
 get_all_empty([{_Coordinate, _}|T], Acc) ->
     get_all_empty(T, Acc).
 
-
+get_random([]) -> none;
 get_random(List) ->
     N = length(List),
     Random = random:uniform(N),
