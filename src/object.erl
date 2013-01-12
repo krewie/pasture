@@ -1,5 +1,6 @@
 -module(object).
--export([get_neighbors/1, get_neighbours/2, get_first_empty/1, get_all_empty/1, get_random/1]).
+-export([get_neighbors/1, get_neighbours/2, get_first_empty/1,
+         get_all_empty/1, get_random/1]).
 -define(LOOKUP(X, Y), ets:lookup(grid, {X, Y})).
 
 

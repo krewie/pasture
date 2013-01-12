@@ -55,7 +55,8 @@ generate_message(Module, Coordinate) ->
 %% är tom %%
 trav_ets(Message) -> ets:foldl(fun({{_X,_Y}, _Object, PID}, Accin) ->
                                        PID ! Message,
-                                       Accin end, notused, grid).
+                                       Accin end,
+                               notused, grid).
 
 
 step() ->
@@ -72,6 +73,12 @@ loop() ->
                       PID ! {reproduction_ok};
                 _ -> 
                     PID ! {reproduction_error}
+            end,
+            loop();
+        {move, PID, {X, Y}} ->
+            case ?LOOKUP(X, Y) of
+                [] -> PID ! {move_ok};
+                _ -> PID ! {move_error}
             end,
             loop();
 	{Pid, Module, Coordinate} ->
