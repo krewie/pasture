@@ -4,6 +4,9 @@
 -define(WIDTH, 40).
 -define(PUT_OBJECT(Object, X, Y),
         ets:insert(grid, {{X, Y}, Object, spawn(Object, init, [{X, Y}])})).
+-define(MOVE_OBJECT(Object, OldCoor, Coor, PID),
+        ets:delete(grid, OldCoor),
+        ets:insert(grid, {Coor, Object, PID})).
 -define(LOOKUP(X, Y), ets:lookup(grid, {X, Y})).
 %%  -------------------  %%
 %% Initieringsfunktioner %%
@@ -75,9 +78,10 @@ loop() ->
                     PID ! {reproduction_error}
             end,
             loop();
-        {move, PID, {X, Y}} ->
+        {move, PID, Module, OldCoor, {X, Y}} ->
             case ?LOOKUP(X, Y) of
-                [] -> PID ! {move_ok};
+                [] -> ?MOVE_OBJECT(Module, OldCoor, {X,Y}, PID),
+                      PID ! {move_ok};
                 _ -> PID ! {move_error}
             end,
             loop();
@@ -86,6 +90,6 @@ loop() ->
 	    Pid ! Message,
 	    loop();
 	_ -> loop()
-    after 15000 ->
+    after 1500 ->
 	    step()	
     end.

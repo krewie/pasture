@@ -5,7 +5,7 @@
 -define(REPRO_RATE, 6).
 -define(HUNGER, 3).
 -define(REPRO_AGE, 3).
--define(SPEED, 3).
+-define(SPEED, 1).
 -export([init/1]).
 
 init({X, Y}) ->
@@ -24,7 +24,7 @@ move(Coordinate) ->
     case Coor of
         none -> Coordinate;
         {X, Y} ->
-            simulator ! {move, self(), Coor},
+            simulator ! {move, self(), ?MODULE, Coordinate, Coor},
             receive
                 {move_ok} ->
                     frame ! {change_cell, OldX, OldY, ?DEF},
