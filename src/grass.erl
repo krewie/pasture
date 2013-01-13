@@ -2,7 +2,7 @@
 -extends(object).
 -behaviour(plant).
 -export([loop/1, init/1]).
--define(REPRODUCTION, 1).
+-define(REPRO_RATE, 5).
 -define(LOOKUP(X, Y), ets:lookup(grid, {X, Y})).
 -define(CELL, "green").
 
@@ -12,11 +12,17 @@ init(Coordinate) ->
     frame ! {change_cell, X, Y, ?CELL},
     loop({Coordinate, ?REPRODUCTION}).
 
-tick(State) ->
-    {{X, Y}, Reproduction} = State,
-    frame ! {change_cell, X, Y, ?CELL},
-    NewState = {{X, Y}, Reproduction-1},
-    NewState.
+
+% Changes state. returns new state.
+tick({{X, Y}, 0}) ->
+    Repro_Result = reproduce({X, Y}, ?MODULE),
+    case Repro_Result of
+        ok -> {{X, Y}, ?REPRO_RATE};
+        error -> {{X, Y}, 0}
+    end;
+tick({{X, Y}, Reproduction}) ->
+     {{X, Y}, Reproduction-1}.
+    
 
 
 %% Tries to reproduce by asking simulator to spawn
@@ -40,13 +46,12 @@ reproduce(Coordinate) ->
             reproduce(Coordinate)
     end.
 
-loop({Coordinate, 0}) ->
-    reproduce(Coordinate),
-    loop({Coordinate, ?REPRODUCTION});
-loop({Coordinate, Reproduction}) ->
-    State = {Coordinate, Reproduction},
+loop(State) ->
+    {Coordinate, Reproduction} = State,
     receive 
         {tick} -> 
             NewState = tick(State),
-            loop(NewState)
+            loop(NewState);
+        {get_eaten, PID, Coordinate} ->
+            PID ! {eat_ok}
     end.

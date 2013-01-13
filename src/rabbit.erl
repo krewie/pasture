@@ -5,6 +5,9 @@
 -define(HUNGER, 1800).
 -define(REPRO_AGE, 3).
 -define(SPEED, 2).
+-define(FOOD, [grass]).
+-define(ENEMIES, [fox]).
+-define(REMOVE_SELF, ets:delete(grid, {X, Y})).
 -export([init/1]).
 
 init({X, Y}) ->
@@ -14,39 +17,45 @@ init({X, Y}) ->
     % Coordinate, Move-Speed, Hunger, Age, Reproduce-rate
     loop({X, Y}, 0, 0, 0, 0).
 
+tick({{X, Y}, _Speed, 0, _Age, _Repro}) ->
+    frame ! {change_cell, X, Y, ?DEF},
+    ?REMOVE_SELF(X, Y),
+    exit(normal);
+tick(State) ->
+    {Coordinate, Speed, Hunger, Age, Repro} = State,
 
-loop({X, Y}, _, ?HUNGER, _, _) ->
-    simulator ! {kill, {X, Y}};
-% can eat?, then reproduce and/or move/flee else move/flee
-loop(Coordinate, ?SPEED, Hunger, ?REPRO_AGE, ?REPRO_RATE) ->
-    rabbit:reproduce(Coordinate, ?MODULE),
-    loop(rabbit:move(Coordinate, ?MODULE, ?CELL),
-         0, Hunger+1, ?REPRO_AGE, 0);
-%% can eat? then reproduce
-loop(Coordinate, Speed, Hunger, ?REPRO_AGE, ?REPRO_RATE) ->
-    rabbit:reproduce(Coordinate, ?MODULE),
-    loop(Coordinate, Speed+1, Hunger+1, ?REPRO_AGE, 0);
-%% in age but can't reproduce, just move
-loop(Coordinate, ?SPEED, Hunger, ?REPRO_AGE, Rate) ->
+    %% ifsatsen är naiv.... Kristian skriver på en Choicefunktion... :)
+    if
+        Hunger < ?HUNGER ->
+            Neigbours = get_neighbours(Coordinate),
+            {{X, Y}, [_, _, PID]} = get_of_types(Neighbours, ?FOOD),
+            Eat_Result = eat({X, Y}, PID),
+            case Eat_Result of
+                eat_error -> tick(State);
+                timeout ->
+                {X, Y} ->
+                    {{X, Y}, Speed, Hunger, Age, Repro}
+            end;
+            %try to eat;
+        Repro < ?REPRO ->
+            Repro_Result = reproduce(Coordinate, )
+            %try to reproduce
+        true ->
+            NewCoordinate = move(Coordinate, ?MODULE, Speed),
+            %try to move.
+    end
+
+
+
+loop(State) ->
+    {Coordinate, Speed, Hunger, Age, Repro} = State,
     receive
         {tick} ->
-            loop(rabbit:move(Coordinate, ?MODULE, ?CELL),
-                 0, Hunger+1, ?REPRO_AGE, Rate+1)
-    end;
-%% in age, but can't do any actions
-loop(Coordinate, Speed, Hunger, ?REPRO_AGE, Rate) ->
-    receive
-        {tick} ->
-            loop(Coordinate, Speed+1, Hunger+1, ?REPRO_AGE, Rate+1)
-    end;
-loop(Coordinate, ?SPEED, Hunger, Age, Rate) ->
-    receive
-        {tick} ->
-            loop(rabbit:move(Coordinate, ?MODULE, ?CELL),
-                 0, Hunger+1, Age+1, Rate)
-    end;
-loop(Coordinate, Speed, Hunger, Age, Rate) ->
-    receive
-        {tick} ->
-            loop(Coordinate, Speed+1, Hunger+1, Age, Rate)
+            NewState = tick(State),
+            loop(NewState);
+        {get_eaten, PID, Coordinate} ->
+            PID ! {eat_ok},
+        {get_eaten, PID, {_X, _Y}} ->
+            PID ! {eat_error},
+            loop(State)
     end.

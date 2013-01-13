@@ -2,7 +2,13 @@
 -extends(object).
 -export([move/3, reproduce/2]).
 
-move(Coordinate, Object, Color) ->
+
+% tries to move. returns new coordinate upon success.
+move(Coordinate, _Object, 0) -> Coordinate;
+move(Coordinate, Object, Speed) ->
+    NewCoordinate = move(Coordinate, Object),
+    move(NewCoordinate, Object, Speed-1).
+move(Coordinate, Object) ->
     Neighbors = creature:get_neighbors(Coordinate),
     Empty = creature:get_all_empty(Neighbors),
     Coor = creature:get_random(Empty),
@@ -13,13 +19,25 @@ move(Coordinate, Object, Color) ->
             simulator ! {move, self(), Object, Coordinate, Coor},
             receive
                 {move_ok} ->
-                    frame ! {change_cell, X, Y, Color},
                     Coor;
                 {move_error} ->
                     move(Coordinate, Object, Color)
             end
     end.
 
+
+
+
+eat(Coordinate, PID) ->
+    PID ! {get_eaten, self(), Coordinate},
+    receive
+        {eat_ok} ->
+            Coordinate;
+        {eat_error} ->
+            eat_error
+    after 500 ->
+        timeout
+    end.
 
 reproduce(Coordinate, Object) ->
     Neighbors = creature:get_neighbors(Coordinate),
