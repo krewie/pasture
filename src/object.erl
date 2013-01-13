@@ -1,8 +1,16 @@
 -module(object).
--export([get_neighbors/1, get_neighbours/2, get_first_empty/1,
+-export([get_neighbors/1, get_neighbours/2, get_of_types/2, get_first_empty/1,
          get_all_empty/1, get_random/1]).
 -define(LOOKUP(X, Y), ets:lookup(grid, {X, Y})).
 
+% Retrieves a list of neigbours that has module name in the list [H|T].
+% returns it as a list of tuples, structured as
+% {{X-coordinate, Y-coordinate}, Object}
+
+get_of_types(_Neighbors, []) -> [];
+get_of_types(Neighbors, [H|T]) ->
+lists:append(lists:filter(fun({{_X,_Y},[{{_X,_Y}, Module, _PID}]}) -> Module == H end, Neighbors),
+    get_of_types(Neighbors, T)).
 
 % retreive the adjecent areas of X, Y.
 % returns it as a list of tuples, structured as
