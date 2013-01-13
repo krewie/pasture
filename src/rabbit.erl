@@ -1,8 +1,8 @@
 -module(rabbit).
 -extends(animal).
--define(CELL, "yellow").
+-define(CELL, "pink").
 -define(REPRO_RATE, 6).
--define(HUNGER, 18).
+-define(HUNGER, 1800).
 -define(REPRO_AGE, 3).
 -define(SPEED, 2).
 -export([init/1]).
@@ -12,36 +12,38 @@ init({X, Y}) ->
     % The idea is that a Move-Speed, Hunger, Reproduce-rate ticks down every
     % tick and that age increase every time we move.
     % Coordinate, Move-Speed, Hunger, Age, Reproduce-rate
-    loop({X, Y}, 0, 0, 0, ?REPRO_RATE).
-
-
-move(Coordinate) ->
-    {OldX, OldY} = Coordinate,
-    Neighbors = rabbit:get_neighbors(Coordinate),
-    Empty = rabbit:get_all_empty(Neighbors),
-    Coor = rabbit:get_random(Empty),
-    case Coor of
-        none -> Coordinate;
-        {X, Y} ->
-            simulator ! {move, self(), ?MODULE, Coordinate, Coor},
-            receive
-                {move_ok} ->
-                    frame ! {change_cell, X, Y, ?CELL},
-                    Coor;
-                {move_error} -> move(Coordinate)
-            end
-    end.
+    loop({X, Y}, 0, 0, 0, 0).
 
 
 loop({X, Y}, _, ?HUNGER, _, _) ->
     simulator ! {kill, {X, Y}};
-loop(_Coordinate, _Speed, _Hunger, _Age, 0) when _Age >= ?REPRO_AGE ->
-    %can eat? then reproduce and/or move/flee else move/flee
-    ok;
+% can eat?, then reproduce and/or move/flee else move/flee
+loop(Coordinate, ?SPEED, Hunger, ?REPRO_AGE, ?REPRO_RATE) ->
+    rabbit:reproduce(Coordinate, ?MODULE),
+    loop(rabbit:move(Coordinate, ?MODULE, ?CELL),
+         0, Hunger+1, ?REPRO_AGE, 0);
+%% can eat? then reproduce
+loop(Coordinate, Speed, Hunger, ?REPRO_AGE, ?REPRO_RATE) ->
+    rabbit:reproduce(Coordinate, ?MODULE),
+    loop(Coordinate, Speed+1, Hunger+1, ?REPRO_AGE, 0);
+%% in age but can't reproduce, just move
+loop(Coordinate, ?SPEED, Hunger, ?REPRO_AGE, Rate) ->
+    receive
+        {tick} ->
+            loop(rabbit:move(Coordinate, ?MODULE, ?CELL),
+                 0, Hunger+1, ?REPRO_AGE, Rate+1)
+    end;
+%% in age, but can't do any actions
+loop(Coordinate, Speed, Hunger, ?REPRO_AGE, Rate) ->
+    receive
+        {tick} ->
+            loop(Coordinate, Speed+1, Hunger+1, ?REPRO_AGE, Rate+1)
+    end;
 loop(Coordinate, ?SPEED, Hunger, Age, Rate) ->
     receive
         {tick} ->
-            loop(move(Coordinate), 0, Hunger+1, Age+1, Rate)
+            loop(rabbit:move(Coordinate, ?MODULE, ?CELL),
+                 0, Hunger+1, Age+1, Rate)
     end;
 loop(Coordinate, Speed, Hunger, Age, Rate) ->
     receive
