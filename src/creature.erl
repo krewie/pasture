@@ -1,6 +1,6 @@
 -module(creature).
 -extends(object).
--export([move/3, reproduce/2]).
+-export([move/3, reproduce/2, eat/2]).
 
 
 % tries to move. returns new coordinate upon success.
@@ -15,17 +15,15 @@ move(Coordinate, Object) ->
     case Coor of
         none ->
             Coordinate;
-        {X, Y} ->
+        {_X, _Y} ->
             simulator ! {move, self(), Object, Coordinate, Coor},
             receive
                 {move_ok} ->
                     Coor;
                 {move_error} ->
-                    move(Coordinate, Object, Color)
+                    move(Coordinate, Object)
             end
     end.
-
-
 
 
 eat(Coordinate, PID) ->
@@ -45,7 +43,7 @@ reproduce(Coordinate, Object) ->
     Coor = creature:get_random(Empty),
     case Coor of
         none -> error;
-        {X, Y} ->
+        {_X, _Y} ->
             simulator ! {reproduce, self(), Object, Coor},
             receive
                 {reproduction_ok} -> ok;

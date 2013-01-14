@@ -10,12 +10,12 @@
 init(Coordinate) ->
     {X, Y} = Coordinate,
     frame ! {change_cell, X, Y, ?CELL},
-    loop({Coordinate, ?REPRODUCTION}).
+    loop({Coordinate, ?REPRO_RATE}).
 
 
 % Changes state. returns new state.
 tick({{X, Y}, 0}) ->
-    Repro_Result = reproduce({X, Y}, ?MODULE),
+    Repro_Result = reproduce({X, Y}),
     case Repro_Result of
         ok -> {{X, Y}, ?REPRO_RATE};
         error -> {{X, Y}, 0}
@@ -47,7 +47,7 @@ reproduce(Coordinate) ->
     end.
 
 loop(State) ->
-    {Coordinate, Reproduction} = State,
+    {Coordinate, _Reproduction} = State,
     receive 
         {tick} -> 
             NewState = tick(State),

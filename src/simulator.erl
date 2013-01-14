@@ -31,26 +31,28 @@ field(Height, Width) ->
     ets:new(grid, [named_table]),
     put_fences(Height-1, Height-1, Width-1).
 
-create_animals(Animals) ->
-    io:format("Want to create ~p animals ~n", [Animals]).
 
-create_plants(Plants) ->
-    io:format("Want to create ~p plants ~n", [Plants]).
-
+create_object(0, _Module, _Xbound, _Ybound) -> ok;
+create_object(N, Module, Xbound, Ybound) ->
+    RandX = random:uniform(Xbound-2)+1,
+    RandY = random:uniform(Ybound-2)+1,
+    io:format("Creating ~p at ~p, ~p ~n", [Module, RandX, RandY]),
+    self() ! {reproduce, self(), Module, {RandX, RandY}},
+    create_object(N-1, Module, Xbound, Ybound).
 
 init() ->
     %%lägga till spawnade object också %%
     io:format("Init simulator~n",[]),
     register(simulator, 
-             spawn_link(simulator, setup, [[?HEIGHT, ?WIDTH, 4, 6]])).
+             spawn_link(simulator, setup, [[?WIDTH, ?HEIGHT, 4, 6]])).
 
 
-setup([Height, Width, Animals, Plants]) ->
+setup([Width, Height, Animals, Plants]) ->
     frame ! {set_w, Width},
     frame ! {set_h, Height},
     field(Height, Width),
-    create_animals(Animals),
-    create_plants(Plants),
+    create_object(4, rabbit, Width, Height),
+    create_object(4, grass, Width, Height),
     step().
 
 
