@@ -5,6 +5,8 @@
 -define(HUNGER, 18).
 -define(REPRO_AGE, 3).
 -define(SPEED, 2).
+%-define(SIGHT, ??).
+%-define(AGE, ??).
 -export([init/1]).
 
 init({X, Y}) ->
@@ -19,6 +21,8 @@ loop(_Coordinate, _Speed, _Hunger, _Age, 0) when _Age >= ?REPRO_AGE ->
 loop(Coordinate, ?SPEED, Hunger, Age, Rate) ->
     receive
         {tick} ->
+            %{{X,Y}, ?SIGHT, ?SPEED, ?HUNGER, ?AGE, ?REPRO_AGE} = State,
+            %loop(choice(State,?MODULE,?CELL,[grass],[??]))
             loop(fox:move(Coordinate, ?MODULE, ?CELL),
                  0, Hunger+1, Age+1, Rate)
     end;
