@@ -1,7 +1,7 @@
 -module(creature).
 -extends(object).
 -define(HUNGRY, 4).
--export([move/3, reproduce/2, eat/2, find_way/3, calc_distance/3, qsort/1]).
+-export([move/3, reproduce/2, eat/2, find_way/3, calc_distance/3, qsort/1, choice/5]).
 
 %Sorterar en lista med element av följande struktur :
 % {{X,Y}, Distance} i fallande ordning.
@@ -46,25 +46,32 @@ find_way([PH|PT],Enemy,[HR|TR]) ->
 % situation.
 
 choice(State,Module,Cell,Food,Enemies) ->
-{Coordinate, Sight, Speed, Hunger, Age, Repro} = State,
-Neighbors = creature:get_neighbours(Coordinate, Sight),
-Empty = creature:get_all_empty(Neighbors),
-Enemy_present = creature:get_of_types(Neighbors, Enemies),
-Food_present = creature:get_of_types(Neighbors, Food),
-% Am i hungry ?
-case Hunger =< ?HUNGRY of 
-    true -> eat
-end,
+    {Coordinate, Sight, Speed, Hunger, Age, Repro} = State,
+    Neighbors = creature:get_neighbours(Coordinate, Sight),
+    Empty = creature:get_all_empty(Neighbors),
+    Enemy_present = creature:get_of_types(Neighbors, Enemies),
+    Food_present = creature:get_of_types(Neighbors, Food),
+    case Hunger =< ?HUNGRY of 
+        true -> 
+            Random_food = object:get_random(Food_present),
+            case Random_food /= [] of
+                true ->
+                    {{X,Y},[{{_X,_Y}, _Module, PID}]} = Random_food,
+                    eat({X,Y}, PID)
+            end
+    end,
+    case lists:length(Enemy_present) /= [] of
+        true -> 
+            Distance = creature:calc_distance(Empty, Enemy_present, []),
+            case Distance /= [] of                                 
+                true ->
+                    [{Coor, _Distance}|T] = creature:qsort(Distance),
+                    move(Coor, Module, Speed)
+            end
+    end.
 
-% Enemies around ?
-case lists:length(Enemy_present) /= [] of
-    true -> 
-        Paths = creature:qsort(creature:calc_distance(Empty, Enemy_present, []));
-        %Paths innehåller nu en lista tomma platser och ett distansvärde som
-        %hur långt ifrån en enemy denna platsen är.
-    false -> to_do_when_no_food_nor_enemy
-
-end.
+    % What to do when there are no food / not time to eat OR
+    % when there are no enemies to evade ?.
 
 % tries to move. returns new coordinate upon success.
 move(Coordinate, _Object, 0) -> Coordinate;
