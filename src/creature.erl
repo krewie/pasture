@@ -5,7 +5,7 @@
 
 qsort([]) -> [];
 qsort([ {Coor,D} | T]) -> 
-   qsort([ {Coor,D1} || {Coor,D1} <- T, D1 > D ]) ++ [{Coor, D}] ++ qsort([ {Coor,D1} || {Coor,D1} <- T, D1 =< D ]).
+   qsort([ {_Coor,D1} || {_Coor,D1} <- T, D1 > D ]) ++ [{Coor, D}] ++ qsort([ {_Coor,D1} || {_Coor,D1} <- T, D1 =< D ]).
 
 calc_distance(_Paths, [], Result) -> Result;
 calc_distance(Paths, [EH|ET], Result) ->
@@ -27,14 +27,28 @@ find_way([PH|PT],Enemy,[HR|TR]) ->
         false -> [{{X1,Y1},Old_Dis} | find_way(PT, Enemy, TR)]  
     end. 
 
-%choice(State,Module, Food, Enemies) ->
-%{Coordinate, Sight, Speed, Hunger, Age, Repro} = State,
-%Neighbors = creature:get_neighbours(Coordinate, Sight),
-%Empty = creature:get_all_empty(Neighbors),
-%Enemy_present = creature:get_of_types(Neighbors, Enemies),
-%Food_present = creature:get_of_types(Neighbors, Food).
+choice(State,Module, Food, Enemies) ->
+{Coordinate, Sight, Speed, Hunger, Age, Repro} = State,
+Neighbors = creature:get_neighbours(Coordinate, Sight),
+Empty = creature:get_all_empty(Neighbors),
+Enemy_present = creature:get_of_types(Neighbors, Enemies),
+Food_present = creature:get_of_types(Neighbors, Food),
+% Am i hungry ?
+case Hunger =< ?HUNGRY of 
+    true -> eat
+end,
 
+% Enemies around ?
+case lists:length(Enemy_present) /= [] of
+    true -> 
+        Paths = creature:qsort(creature:calc_distance(Empty, Enemy_present, []));
+        %Paths innehåller nu en lista tomma platser och ett distansvärde som
+        %hur långt ifrån en enemy denna platsen är.
+    false -> to_do_when_no_food_nor_enemy
 
+end.
+
+% tries to move. returns new coordinate upon success.
 move(Coordinate, _Object, 0) -> Coordinate;
 move(Coordinate, Object, Speed) ->
     NewCoordinate = move(Coordinate, Object),
