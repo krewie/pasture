@@ -3,13 +3,28 @@
 -define(HUNGRY, 4).
 -export([move/3, reproduce/2, eat/2, find_way/3, calc_distance/3, qsort/1]).
 
+%Sorterar en lista med element av följande struktur :
+% {{X,Y}, Distance} i fallande ordning.
+
 qsort([]) -> [];
 qsort([ {Coor,D} | T]) -> 
    qsort([ {_Coor,D1} || {_Coor,D1} <- T, D1 > D ]) ++ [{Coor, D}] ++ qsort([ {_Coor,D1} || {_Coor,D1} <- T, D1 =< D ]).
 
+% Returnerar en lista med koordinater till tomma platser 
+% och distansen från den tomma platsen till fienderna
+% i närheten. Givet en lista med tomma platser,en lista med fiender och 
+% en tom initieringslista, detta är listan som kommer
+% innehålla resultaten som används när find_way påkallas
+% med ny fiende från fiende listan.
+
+%Paths och fiende listan är strukturerad på följande sätt: 
+%[ {{X,Y}, [{{X,Y}, Module, PID}]} ... ]
+
 calc_distance(_Paths, [], Result) -> Result;
 calc_distance(Paths, [EH|ET], Result) ->
     calc_distance(Paths, ET, find_way(Paths,EH,Result)).
+
+% Hjälpfunktion till calc_distance.
 
 find_way([],_Enemy,_Res) -> [];
 find_way([PH|PT],Enemy,[]) ->
@@ -27,7 +42,10 @@ find_way([PH|PT],Enemy,[HR|TR]) ->
         false -> [{{X1,Y1},Old_Dis} | find_way(PT, Enemy, TR)]  
     end. 
 
-choice(State,Module, Food, Enemies) ->
+% Låter modulen / djuret göra nödvändiga drag beroende på
+% situation.
+
+choice(State,Module,Cell,Food,Enemies) ->
 {Coordinate, Sight, Speed, Hunger, Age, Repro} = State,
 Neighbors = creature:get_neighbours(Coordinate, Sight),
 Empty = creature:get_all_empty(Neighbors),
