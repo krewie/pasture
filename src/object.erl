@@ -19,7 +19,7 @@ get_types(_Neighbors, []) -> [];
 get_types(Neighbors, [H|T]) ->
     lists:append(
         lists:filter(fun({{_X,_Y},[{{_X,_Y}, Module, _PID}]}) -> Module == H end, Neighbors),
-    get_of_types(Neighbors, T)).
+    get_types(Neighbors, T)).
 
 
 % retreive the adjecent areas of X, Y.
