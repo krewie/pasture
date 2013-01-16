@@ -93,7 +93,8 @@ loop() ->
             ?MOVE_OBJECT(Module, OldX, OldY, NewX, NewY, PID),
                         frame ! {change_cell, OldX, OldY, "white"},
                         frame ! {change_cell, NewX, NewY, Color},
-                        PID ! {eat_ok};
+                        PID ! {eat_ok},
+            loop();
         {kill, PID, {X, Y}} ->
             ?KILL(X, Y),
             exit(PID, kill),
