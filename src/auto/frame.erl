@@ -13,6 +13,7 @@
 
 -export([draw/0, set_head/1, set_foot/1, set_w/1, set_h/1, 
          change_cell/3, reset_cells/0]).
+-compile({no_auto_import,[error/2]}).
 
 %%%% from automata.erl. httpd glue.
 

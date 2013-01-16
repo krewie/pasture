@@ -7,7 +7,6 @@
         ets:insert(grid, {{X, Y}, Object, spawn(Object, init, [{X, Y}])})).
 -define(MOVE_OBJECT(Object, OldX, OldY, X, Y, PID),
         ets:delete(grid, {OldX, OldY}),
-        frame ! {change_cell, OldX, OldY, ?DEF},
         ets:insert(grid, {{X, Y}, Object, PID})).
 -define(LOOKUP(X, Y), ets:lookup(grid, {X, Y})).
 -define(KILL(X, Y),
@@ -56,10 +55,6 @@ setup([Width, Height, Animals, Plants]) ->
     step().
 
 
-generate_message(Module, Coordinate) ->
-    %% komma på nåt sätt att generera ett meddelande? %%
-    {self(), ?MODULE, {Module, Coordinate}}.
-
 %% traverserar och applicerar funktionen fun på alla inlägg i ets : grid %%
 %% spec:en till foldl kräver att 'Accin' defineras, skall användas om tabellen
 %% är tom %%
@@ -85,21 +80,25 @@ loop() ->
                     PID ! {reproduction_error}
             end,
             loop();
-        {move, PID, Module, {OldX, OldY}, {X, Y}} ->
-            case ?LOOKUP(X, Y) of
-                [] -> ?MOVE_OBJECT(Module, OldX, OldY, X, Y, PID),
-                      PID ! {move_ok};
+        {move, PID, Module, {OldX, OldY}, {NewX, NewY}, Color} ->
+            case ?LOOKUP(NewX, NewY) of
+                [] ->   ?MOVE_OBJECT(Module, OldX, OldY, NewX, NewY, PID),
+                        frame ! {change_cell, OldX, OldY, "white"},
+                        frame ! {change_cell, NewX, NewY, Color},
+                        PID ! {move_ok};
                 _ -> PID ! {move_error}
             end,
             loop();
-        {kill, {X, Y}} ->
+        {eat, PID, Module, {OldX, OldY}, {NewX, NewY}, Color} ->
+            ?MOVE_OBJECT(Module, OldX, OldY, NewX, NewY, PID),
+                        frame ! {change_cell, OldX, OldY, "white"},
+                        frame ! {change_cell, NewX, NewY, Color},
+                        PID ! {eat_ok};
+        {kill, PID, {X, Y}} ->
             ?KILL(X, Y),
+            exit(PID, kill),
             loop();
-	{Pid, Module, Coordinate} ->
-	    Message = generate_message(Module, Coordinate),
-	    Pid ! Message,
-	    loop();
-	_ -> loop()
+	    _ -> loop()
     after 1500 ->
 	    step()	
     end.

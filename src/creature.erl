@@ -1,7 +1,7 @@
 -module(creature).
 -extends(object).
 -define(HUNGRY, 4).
--export([move/3, reproduce/2, eat/2, find_way/3, calc_distance/3, qsort/1, choice/5]).
+-export([move/4, reproduce/2, eat/4, find_way/3, calc_distance/3, qsort/1]).
 
 %Sorterar en lista med element av följande struktur :
 % {{X,Y}, Distance} i fallande ordning.
@@ -45,66 +45,57 @@ find_way([PH|PT],Enemy,[HR|TR]) ->
 % Låter modulen / djuret göra nödvändiga drag beroende på
 % situation.
 
-choice(State,Module,Cell,Food,Enemies) ->
-    {Coordinate, Sight, Speed, Hunger, Age, Repro} = State,
-    Neighbors = creature:get_neighbours(Coordinate, Sight),
-    Empty = creature:get_all_empty(Neighbors),
-    Enemy_present = creature:get_of_types(Neighbors, Enemies),
-    Food_present = creature:get_of_types(Neighbors, Food),
-    case Hunger =< ?HUNGRY of 
-        true -> 
-            Random_food = object:get_random(Food_present),
-            case Random_food /= [] of
-                true ->
-                    {{X,Y},[{{_X,_Y}, _Module, PID}]} = Random_food,
-                    eat({X,Y}, PID)
-            end
-    end,
-    case lists:length(Enemy_present) /= [] of
-        true -> 
-            Distance = creature:calc_distance(Empty, Enemy_present, []),
-            case Distance /= [] of                                 
-                true ->
-                    [{Coor, _Distance}|T] = creature:qsort(Distance),
-                    move(Coor, Module, Speed)
-            end
-    end.
+%choice(State,Module,Cell,Food,Enemies) ->
+%    {Coordinate, Sight, Speed, Hunger, Age, Repro} = State,
+%    Neighbors = creature:get_neighbours(Coordinate, Sight),
+%    Empty = creature:get_all_empty(Neighbors),
+%    Enemy_present = creature:get_of_types(Neighbors, Enemies),
+%    Food_present = creature:get_of_types(Neighbors, Food),
+%    case Hunger =< ?HUNGRY of 
+%        true -> 
+%            Random_food = object:get_random(Food_present),
+%            case Random_food /= [] of
+%                true ->
+%                    {{X,Y},[{{_X,_Y}, _Module, PID}]} = Random_food,
+%                    eat({X,Y}, PID)
+%            end
+%    end,
+%    case lists:length(Enemy_present) /= [] of
+%        true -> 
+%            Distance = creature:calc_distance(Empty, Enemy_present, []),
+%            case Distance /= [] of                                 
+%                true ->
+%                    [{Coor, _Distance}|T] = creature:qsort(Distance)
+%            end
+%    end.
 
     % What to do when there are no food / not time to eat OR
     % when there are no enemies to evade ?.
 
 % tries to move. returns new coordinate upon success.
-move(Coordinate, _Object, 0) -> Coordinate;
-move(Coordinate, Object, Speed) ->
-    NewCoordinate = move(Coordinate, Object),
-    move(NewCoordinate, Object, Speed-1).
-move(Coordinate, Object) ->
-    Neighbors = creature:get_neighbors(Coordinate),
-    Empty = creature:get_all_empty(Neighbors),
-    Coor = creature:get_random(Empty),
-    case Coor of
-        none ->
-            Coordinate;
-        {_X, _Y} ->
-            simulator ! {move, self(), Object, Coordinate, Coor},
-            receive
-                {move_ok} ->
-                    Coor;
-                {move_error} ->
-                    move(Coordinate, Object)
-            end
+
+move(Coordinate, [], _Module, _Color) -> Coordinate;
+move(Coordinate, [NewCoordinate|T], Module, Color) ->
+    simulator ! {move, self(), Module, Coordinate, NewCoordinate, Color},
+    receive
+        {move_ok} ->
+            NewCoordinate;
+        {move_error} ->
+            move(Coordinate, T, Module, Color)
     end.
 
-
-eat(Coordinate, PID) ->
-    PID ! {get_eaten, self(), Coordinate},
+eat(Coordinate, [], Module, Color) -> fail;
+eat(Coordinate, [{NewCoordinate, [{NewCoordinate, _, PID}]}|T], Module, Color) ->
+    PID ! {get_eaten, self(), NewCoordinate},
     receive
         {eat_ok} ->
-            Coordinate;
+            simulator ! {eat, self(), Module, Coordinate, NewCoordinate, Color};
         {eat_error} ->
-            eat_error
-    after 500 ->
-        timeout
+            eat(Coordinate, T, Module, Color)
+    end,
+    receive
+        {eat_ok} -> NewCoordinate
+    after 500 -> timeout
     end.
 
 reproduce(Coordinate, Object) ->
