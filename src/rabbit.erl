@@ -19,9 +19,7 @@
 
 init({X, Y}) ->
     frame ! {change_cell, X, Y, ?CELL},
-<<<<<<< HEAD
-    loop({{X, Y}, ?SPEED, ?HUNGER+20, 0, 0}).
-
+    loop({{X, Y}, 0, 0, 0, 0}).
 
 % THERE ARE SEVERAL STATES A ANIMAL CAN BE IN, THESE ARE:
 % 1. dead by starvation
@@ -32,16 +30,6 @@ init({X, Y}) ->
 % 6. eat
 % 7. no actions
 % THESE STATES SHOULD BE CHECKED IN THE ABOVE ORDER I BELIEVE
-tick({{X, Y}, Speed, 0, Age, Repro}) ->
-    simulator ! {kill, self(), {X, Y}},
-    {{X,Y}, Speed, 0, Age, Repro};
-tick({Coordinate, Speed, Hunger, Age, Repro}) when Hunger < ?HUNGER ->
-=======
-    % The idea is that a Move-Speed, Hunger, Reproduce-rate ticks down every
-    % tick and that age increase every time we move.
-    % Coordinate, Move-Speed, Hunger, Age, Reproduce-rate
-    loop({{X, Y}, 0, 0, 0, 0}).
-
 tick({{X, Y}, _Speed, ?STARVE, _Age, _Repro}) ->
     frame ! {change_cell, X, Y, ?DEF},
     simulator ! {kill, {X, Y}},
@@ -49,7 +37,6 @@ tick({{X, Y}, _Speed, ?STARVE, _Age, _Repro}) ->
 tick({Coordinate, Speed, Hunger, Age, Repro}) when Hunger > ?HUNGER ->
     %try to eat
     io:format("~p: hungry, trying to eat... ~n", [Coordinate]),
->>>>>>> Lite allt möjligt.
     Neighbours = rabbit:get_neighbours(Coordinate, 1),
     Food = rabbit:get_of_types(Neighbours, ?FOOD),
     Eat_Result = rabbit:eat(Coordinate, Food, ?MODULE, ?CELL),
@@ -74,14 +61,6 @@ tick({Coordinate, Speed, Hunger, Age, Repro}) when Hunger > ?HUNGER ->
 tick(State) ->
     % har nu bara att jag går random....
     {Coordinate, Speed, Hunger, Age, Repro} = State,
-<<<<<<< HEAD
-    Neighbours = rabbit:get_neighbours(Coordinate, 1),
-    Empty = creature:get_all_empty(Neighbours),
-    Empty_Random = [X || {_,X} <- lists:sort(
-                                    [ {random:uniform(), N} || N <- Empty])],
-    Move_Result = rabbit:move(Coordinate, Empty_Random, ?MODULE, ?CELL),
-    {Move_Result, Speed, Hunger-1, Age+1, Repro+1}.
-=======
     case Speed > ?SPEED of
         true ->
             Neighbors = rabbit:get_neighbours(Coordinate, 1),
@@ -92,8 +71,6 @@ tick(State) ->
         _ ->
             {Coordinate, Speed+1, Hunger+1, Age+1, Repro+1}
     end.
->>>>>>> Lite allt möjligt.
-
 
 
 loop(State) ->
