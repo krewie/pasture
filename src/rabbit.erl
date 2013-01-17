@@ -1,11 +1,7 @@
 -module(rabbit).
 -extends(animal).
 -define(CELL, "pink").
-<<<<<<< HEAD
-=======
--define(DEF, "white").
 -define(STARVE, 100).
->>>>>>> Lite allt möjligt.
 -define(REPRO_RATE, 6).
 -define(HUNGER, 5).
 -define(REPRO_AGE, 3).
@@ -13,7 +9,6 @@
 -define(FOOD, [grass]).
 -define(ENEMIES, [fox]).
 -define(SIGHT, 1).
--define(UPDATE_FRAME(X, Y), frame ! {change_cell, X, Y, ?CELL}).
 -export([init/1]).
 
 init({X, Y}) ->
@@ -33,7 +28,7 @@ tick({{X, Y}, _Speed, ?STARVE, _Age, _Repro}) ->
     % Unnecessary because is in macro in Simulator and ?DEF is good if only
     % defined at one location so that it doesn't need to be changed on
     % several places in case you do some background switch
-%    frame ! {change_cell, X, Y, ?DEF},
+    % frame ! {change_cell, X, Y, ?DEF},
     simulator ! {kill, {X, Y}},
     exit(normal);
 tick({Coordinate, Speed, Hunger, Age, Repro}) when Hunger > ?HUNGER ->
@@ -43,7 +38,14 @@ tick({Coordinate, Speed, Hunger, Age, Repro}) when Hunger > ?HUNGER ->
     Food = rabbit:get_of_types(Neighbours, ?FOOD),
     Eat_Result = rabbit:eat(Coordinate, Food, ?MODULE, ?CELL),
     case Eat_Result of
-        fail -> {Coordinate, Speed+1, Hunger+1, Age+1, Repro+1};
+        fail -> 
+            case Speed > ?SPEED of
+                true ->
+                    Move_List = rabbit:choice(State, ?FOOD, ?ENEMIES),
+                    NewCoordinate = rabbit:move(Coordinate, MovementList);
+                _ ->
+                    {Coordinate, Speed+1, Hunger+1, Age+1, Repro+1}
+            end;
         NewCoordinate -> 
             case Repro > ?REPRO_RATE andalso Age > ?REPRO_AGE of
                 true ->
