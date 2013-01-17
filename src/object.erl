@@ -1,6 +1,7 @@
 -module(object).
--export([get_neighbours/1, get_neighbours/2, get_types/2,get_of_types/2,get_occupied/1,
-         get_first_empty/1,get_all_empty/1, get_random/1]).
+-export([get_neighbours/1, get_neighbours/2, get_types/2, get_of_types/2,
+         get_occupied/1, get_first_empty/1, get_all_empty/1, get_random/1,
+        randomize_list/1]).
 -define(LOOKUP(X, Y), ets:lookup(grid, {X, Y})).
 
 % Returns neighboors that are not empty, occupied by some

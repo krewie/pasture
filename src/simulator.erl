@@ -52,6 +52,7 @@ setup([Width, Height, Animals, Plants]) ->
     field(Height, Width),
     create_object(4, rabbit, Width, Height),
     create_object(4, grass, Width, Height),
+    create_object(4, fox, Width, Height),
     step().
 
 
