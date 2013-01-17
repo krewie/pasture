@@ -71,6 +71,9 @@ step() ->
 
 loop() ->
     receive
+        {reproduce_eat, PID, Module, {X, Y}} ->
+            ?PUT_OBJECT(Module, X, Y),
+            loop();
         {reproduce, PID, Module, {X, Y}} -> 
             case ?LOOKUP(X, Y) of
                 [] -> ?PUT_OBJECT(Module, X, Y),
@@ -78,6 +81,11 @@ loop() ->
                 _ -> 
                     PID ! {reproduction_error}
             end,
+            loop();
+        {move_eat, PID, Module, {OldX, OldY}, {NewX, NewY}, Color} ->
+            ?MOVE_OBJECT(Module, OldX, OldY, NewX, NewY, PID),
+            frame ! {change_cell, OldX, OldY, "white"},
+            frame ! {change_cell, NewX, NewY, Color},
             loop();
         {move, PID, Module, {OldX, OldY}, {NewX, NewY}, Color} ->
             case ?LOOKUP(NewX, NewY) of
@@ -94,9 +102,8 @@ loop() ->
             frame ! {change_cell, NewX, NewY, Color},
             PID ! {eat_ok},
             loop();
-        {kill, PID, {X, Y}} ->
+        {kill, {X, Y}} ->
             ?KILL(X, Y),
-            exit(PID, kill),
             loop();
 	    _ -> loop()
     after 1500 ->

@@ -14,14 +14,18 @@ init(Coordinate) ->
 
 
 % Changes state. returns new state.
-tick({{X, Y}, 0}) ->
-    Repro_Result = reproduce({X, Y}),
+tick({Coordinate, Reproduction}) when Reproduction > ?REPRO_RATE ->
+    Neighbors = grass:get_neighbours(Coordinate, 1),
+    Empty = grass:get_all_empty(Neighbors),
+    io:format("~p: My Coordinate: ~p, My Neighbors: ~p ~n", [self(), Coordinate, Empty]),
+    %Empty_Random = [X||{_,X} <- lists:sort([ {random:uniform(), N} || N <- Empty])],
+    Repro_Result = reproduce(Empty),
     case Repro_Result of
-        ok -> {{X, Y}, ?REPRO_RATE};
-        error -> {{X, Y}, 0}
+        ok -> {Coordinate, 0};
+        error -> {Coordinate, Reproduction+1}
     end;
-tick({{X, Y}, Reproduction}) ->
-     {{X, Y}, Reproduction-1}.
+tick({Coordinate, Reproduction}) ->
+     {Coordinate, Reproduction+1}.
     
 
 
@@ -29,21 +33,14 @@ tick({{X, Y}, Reproduction}) ->
 %% object at currently empty coordinate.
 %% Not sure if we att the current case (grass) need
 %% to know the result of the reproduction.
-reproduce(Coordinate) ->
-    Neighbors = grass:get_neighbors(Coordinate),
-    Empty = grass:get_all_empty(Neighbors),
-    Rep_Coor = grass:get_random(Empty),
-    case Rep_Coor of 
-        none -> 
-            error;
-        {X, Y} -> 
-            simulator ! {reproduce, self(), ?MODULE, {X, Y}}
-    end,
+reproduce([]) -> error;
+reproduce([Coordinate|T]) ->
+    simulator ! {reproduce, self(), ?MODULE, Coordinate},
     receive
         {reproduction_ok} ->
             ok;
         {reproduction_error} ->
-            reproduce(Coordinate)
+            reproduce(T)
     end.
 
 loop(State) ->

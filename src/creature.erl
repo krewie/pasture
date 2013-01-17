@@ -88,18 +88,13 @@ move(Coordinate, [NewCoordinate|T], Module, Color) ->
             move(Coordinate, T, Module, Color)
     end.
 
-eat(Coordinate, [], Module, Color) -> fail;
+eat(_Coordinate, [], _Module, _Color) -> fail;
 eat(Coordinate, [{NewCoordinate, [{NewCoordinate, _, PID}]}|T], Module, Color) ->
     PID ! {get_eaten, self(), NewCoordinate},
     receive
-        {eat_ok} ->
-            simulator ! {eat, self(), Module, Coordinate, NewCoordinate, Color};
+        {eat_ok} -> NewCoordinate;
         {eat_error} ->
             eat(Coordinate, T, Module, Color)
-    end,
-    receive
-        {eat_ok} -> NewCoordinate
-    after 500 -> timeout
     end.
 
 reproduce(Coordinate, Object) ->

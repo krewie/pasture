@@ -1,10 +1,15 @@
 -module(rabbit).
 -extends(animal).
 -define(CELL, "pink").
+<<<<<<< HEAD
+=======
+-define(DEF, "white").
+-define(STARVE, 100).
+>>>>>>> Lite allt möjligt.
 -define(REPRO_RATE, 6).
--define(HUNGER, 10).
+-define(HUNGER, 5).
 -define(REPRO_AGE, 3).
--define(SPEED, 2).
+-define(SPEED, 1).
 -define(FOOD, [grass]).
 -define(ENEMIES, [fox]).
 %-define(SIGHT, ??).
@@ -14,6 +19,7 @@
 
 init({X, Y}) ->
     frame ! {change_cell, X, Y, ?CELL},
+<<<<<<< HEAD
     loop({{X, Y}, ?SPEED, ?HUNGER+20, 0, 0}).
 
 
@@ -30,22 +36,63 @@ tick({{X, Y}, Speed, 0, Age, Repro}) ->
     simulator ! {kill, self(), {X, Y}},
     {{X,Y}, Speed, 0, Age, Repro};
 tick({Coordinate, Speed, Hunger, Age, Repro}) when Hunger < ?HUNGER ->
+=======
+    % The idea is that a Move-Speed, Hunger, Reproduce-rate ticks down every
+    % tick and that age increase every time we move.
+    % Coordinate, Move-Speed, Hunger, Age, Reproduce-rate
+    loop({{X, Y}, 0, 0, 0, 0}).
+
+tick({{X, Y}, _Speed, ?STARVE, _Age, _Repro}) ->
+    frame ! {change_cell, X, Y, ?DEF},
+    simulator ! {kill, {X, Y}},
+    exit(normal);
+tick({Coordinate, Speed, Hunger, Age, Repro}) when Hunger > ?HUNGER ->
+    %try to eat
+    io:format("~p: hungry, trying to eat... ~n", [Coordinate]),
+>>>>>>> Lite allt möjligt.
     Neighbours = rabbit:get_neighbours(Coordinate, 1),
     Food = rabbit:get_of_types(Neighbours, ?FOOD),
     Eat_Result = rabbit:eat(Coordinate, Food, ?MODULE, ?CELL),
     case Eat_Result of
-        fail -> {Coordinate, Speed-1, Hunger-1, Age+1, Repro+1};
-        NewCoordinate -> {NewCoordinate, Speed, ?HUNGER+5, Age+1, Repro+1}
+        fail -> {Coordinate, Speed+1, Hunger+1, Age+1, Repro+1};
+        NewCoordinate -> 
+            case Repro > ?REPRO_RATE andalso Age > ?REPRO_AGE of
+                true -> 
+                    simulator ! {reproduce_eat, self(), ?MODULE, NewCoordinate},
+                    {Coordinate, Speed+1, 0, Age+1, 0};
+                _ -> 
+                    case Speed > ?SPEED of
+                        true -> 
+                            simulator ! {move_eat, self(), ?MODULE, Coordinate, NewCoordinate, ?CELL},
+                            {NewCoordinate, 0, 0, Age+1, Repro+1};
+                        _ ->
+                            simulator ! {kill, NewCoordinate},
+                            {Coordinate, Speed+1, 0, Age+1, Repro+1}
+                    end
+            end
     end;
 tick(State) ->
     % har nu bara att jag går random....
     {Coordinate, Speed, Hunger, Age, Repro} = State,
+<<<<<<< HEAD
     Neighbours = rabbit:get_neighbours(Coordinate, 1),
     Empty = creature:get_all_empty(Neighbours),
     Empty_Random = [X || {_,X} <- lists:sort(
                                     [ {random:uniform(), N} || N <- Empty])],
     Move_Result = rabbit:move(Coordinate, Empty_Random, ?MODULE, ?CELL),
     {Move_Result, Speed, Hunger-1, Age+1, Repro+1}.
+=======
+    case Speed > ?SPEED of
+        true ->
+            Neighbors = rabbit:get_neighbours(Coordinate, 1),
+            Empty = creature:get_all_empty(Neighbors),
+            Empty_Random = [X||{_,X} <- lists:sort([ {random:uniform(), N} || N <- Empty])],
+            Move_Result = rabbit:move(Coordinate, Empty_Random, ?MODULE, ?CELL),
+            {Move_Result, 0, Hunger+1, Age+1, Repro+1};
+        _ ->
+            {Coordinate, Speed+1, Hunger+1, Age+1, Repro+1}
+    end.
+>>>>>>> Lite allt möjligt.
 
 
 
