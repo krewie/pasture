@@ -84,7 +84,7 @@ loop() ->
             loop();
         {move_eat, PID, Module, {OldX, OldY}, {NewX, NewY}, Color} ->
             ?MOVE_OBJECT(Module, OldX, OldY, NewX, NewY, PID),
-            frame ! {change_cell, OldX, OldY, "white"},
+            frame ! {change_cell, OldX, OldY, ?DEF},
             frame ! {change_cell, NewX, NewY, Color},
             loop();
         {move, PID, Module, {OldX, OldY}, {NewX, NewY}, Color} ->

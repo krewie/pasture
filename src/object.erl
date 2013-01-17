@@ -81,4 +81,9 @@ get_random([]) -> none;
 get_random(List) ->
     N = length(List),
     Random = random:uniform(N),
-    lists:nth(Random, List).  
+    lists:nth(Random, List).
+
+randomize_list([]) -> [];
+randomize_list(List) ->
+    [X || {_, X} <- lists:sort(
+                      [{random:uniform(), N} || N <- List])].

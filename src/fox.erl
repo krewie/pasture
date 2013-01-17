@@ -3,18 +3,18 @@
 -define(CELL, "red").
 -define(REPRO_RATE, 6).
 -define(HUNGER, 18).
+-define(STARVE, 70).
 -define(REPRO_AGE, 3).
 -define(SPEED, 2).
 -define(FOOD, [rabbit]).
 -define(ENEMIES, []).
-%-define(SIGHT, ??).
-%-define(AGE, ??).
+-define(SIGHT, 1).
 -define(UPDATE_FRAME(X, Y), frame ! {change_cell, X, Y, ?CELL}).
 -export([init/1]).
 
 init({X, Y}) ->
     frame ! {change_cell, X, Y, ?CELL},
-    loop({X, Y}, ?SPEED, ?HUNGER+20, 0, 0).
+    loop({{X, Y}, 0, 0, 0, ?REPRO_RATE}).
 
 
 % THERE ARE SEVERAL STATES A ANIMAL CAN BE IN, THESE ARE:
@@ -34,13 +34,42 @@ init({X, Y}) ->
 % 8. no actions (DONE)
 % THESE STATES SHOULD BE CHECKED IN THE ABOVE ORDER I BELIEVE
 % REALIZED NOW THAT THIS SHOULD BE HANDELD IN CHOICE()
-tick({Coordinate, Speed, 0, Age, Repro}) ->
+tick({Coordinate, _Speed, ?STARVE, _Age, _Repro}) ->
     % 1. dead by starvation
-    simulator ! {kill, self(), Coordinate},
-    {Coordinate, Speed, 0, Age, Repro};
-tick({Coordinate, 0, Hunger, ?REPRO_AGE, ?REPRO_RATE})
-  when Hunger < ?HUNGER ->
+    simulator ! {kill, Coordinate},
+    exit(normal);
+tick({Coordinate, 0, Hunger, ?REPRO_AGE, ?REPRO_RATE}) when Hunger > ?HUNGER ->
     % 2.1 move/flee, eat, reproduce
+    io:format("~p: hungry, trying to eat... ~n", [Coordinate]),
+    Neighbours = fox:get_neighbours(Coordinate, ?SIGHT),
+    Food = fox:get_of_types(Neighbours, ?FOOD),
+    Empty = fox:get_all_empty(Neighbours),
+    Empty_Random = fox:randomize_list(List),
+    Eat_Result = fox:eat(Coordinate, Food, ?MODULE, ?CELL),
+    case Eat_Result of
+        fail ->
+            case Speed > ?SPEED of
+                true ->
+                    % Could handle if should flee or not?
+                    Move_Result = fox:move(Coordinate, Empty_Random,
+                                           ?MODULE, ?CELL),
+                    {Move_Result, 0, Hunger+1, Age+1, Repro+1};
+                _ ->
+                    {Coordinate, Speed+1, Hunger+1, Age+1, Repro+1}
+            end;
+        NewCoordinate ->
+            case Repro > ?REPRO_RATE andalso Age > ?REPRO_AGE of
+                true ->
+                    simulator ! {reproduce_eat, self(), ?MODULE, NewCoordinate},
+                    case Speed > ?SPEED of
+                        true ->
+                            
+                        _ -> fail
+                    end,
+                    {Coordinate, Speed+1, 0, Age+1, 0};
+                _ ->
+
+
     {Coordinate, ?SPEED, ?HUNGER+5, ?REPRO_AGE, 0};
 tick({Coordinate, 0, Hunger, ?REPRO_AGE, Repro})
   when Hunger < ?HUNGER ->
@@ -104,38 +133,7 @@ tick({Coordinate, Speed, Hunger, Age, Repro})->
     % 8. no actions
     {Coordinate, Speed-1, Hunger-1, Age, Repro}.
 
-%tick({Coordinate, Speed, Hunger, Age, Repro}) when Hunger < ?HUNGER ->
-%    Neighbours = fox:get_neighbours(Coordinate, 1),
-%    Food = fox:get_of_types(Neighbours, ?FOOD),
-%    Eat_Result = fox:eat(Coordinate, Food, ?MODULE, ?CELL),
-%    case Eat_Result of
-%        fail -> {Coordinate, Speed-1, Hunger-1, Age+1, Repro+1};
-%        NewCoordinate -> {NewCoordinate, Speed, ?HUNGER+5, Age+1, Repro+1}
-%    end;
-%tick(State) ->
-%    % har nu bara att jag går random....
-%    {Coordinate, Speed, Hunger, Age, Repro} = State,
-%    Neighbours = fox:get_neighbours(Coordinate, 1),
-%    Empty = fox:get_all_empty(Neighbours),
-%    Empty_Random = [X || {_, X} <- list:sort(
-%                                     [ {random:uniform(), N} || N <- Empty ])],
-%    Move_Result = fox:move(Coordinate, Empty_Random, ?MODULE, ?CELL),
-%    {Move_Result, Speed, Hunger-1, Age+1, Repro+1}.
 
-
-
-%loop({X, Y}, _, ?HUNGER, _, _) ->
-%    simulator ! {kill, {X, Y}};
-%loop(_Coordinate, _Speed, _Hunger, _Age, 0) when _Age >= ?REPRO_AGE ->
-%    ok;
-%loop(Coordinate, ?SPEED, Hunger, Age, Rate) ->
-%    receive
-%        {tick} ->
-            %{{X,Y}, ?SIGHT, ?SPEED, ?HUNGER, ?AGE, ?REPRO_AGE} = State,
-            %loop(choice(State,?MODULE,?CELL,[grass],[??]))
-%            loop(fox:move(Coordinate, ?MODULE, ?CELL),
-%                 0, Hunger+1, Age+1, Rate)
-%    end;
 loop(State) ->
     {Coordinate, _Speed, _Hunger, _Age, _Repro} = State,
     receive

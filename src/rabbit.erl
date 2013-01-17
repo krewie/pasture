@@ -12,8 +12,7 @@
 -define(SPEED, 1).
 -define(FOOD, [grass]).
 -define(ENEMIES, [fox]).
-%-define(SIGHT, ??).
-%-define(AGE, ??).
+-define(SIGHT, 1).
 -define(UPDATE_FRAME(X, Y), frame ! {change_cell, X, Y, ?CELL}).
 -export([init/1]).
 
@@ -31,26 +30,30 @@ init({X, Y}) ->
 % 7. no actions
 % THESE STATES SHOULD BE CHECKED IN THE ABOVE ORDER I BELIEVE
 tick({{X, Y}, _Speed, ?STARVE, _Age, _Repro}) ->
-    frame ! {change_cell, X, Y, ?DEF},
+    % Unnecessary because is in macro in Simulator and ?DEF is good if only
+    % defined at one location so that it doesn't need to be changed on
+    % several places in case you do some background switch
+%    frame ! {change_cell, X, Y, ?DEF},
     simulator ! {kill, {X, Y}},
     exit(normal);
 tick({Coordinate, Speed, Hunger, Age, Repro}) when Hunger > ?HUNGER ->
     %try to eat
     io:format("~p: hungry, trying to eat... ~n", [Coordinate]),
-    Neighbours = rabbit:get_neighbours(Coordinate, 1),
+    Neighbours = rabbit:get_neighbours(Coordinate, ?SIGHT),
     Food = rabbit:get_of_types(Neighbours, ?FOOD),
     Eat_Result = rabbit:eat(Coordinate, Food, ?MODULE, ?CELL),
     case Eat_Result of
         fail -> {Coordinate, Speed+1, Hunger+1, Age+1, Repro+1};
         NewCoordinate -> 
             case Repro > ?REPRO_RATE andalso Age > ?REPRO_AGE of
-                true -> 
+                true ->
                     simulator ! {reproduce_eat, self(), ?MODULE, NewCoordinate},
                     {Coordinate, Speed+1, 0, Age+1, 0};
                 _ -> 
                     case Speed > ?SPEED of
                         true -> 
-                            simulator ! {move_eat, self(), ?MODULE, Coordinate, NewCoordinate, ?CELL},
+                            simulator ! {move_eat, self(), ?MODULE, Coordinate,
+                                         NewCoordinate, ?CELL},
                             {NewCoordinate, 0, 0, Age+1, Repro+1};
                         _ ->
                             simulator ! {kill, NewCoordinate},
