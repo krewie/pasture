@@ -22,7 +22,7 @@ qsort([ {Coor,D} | T]) ->
 %Paths och fiende listan är strukturerad på följande sätt: 
 %[ {{X,Y}, [{{X,Y}, Module, PID}]} ... ]
 
-calc_distance(Paths, [], []) -> [{{X, Y}, 0} || {X, Y} <- Paths];
+calc_distance(Paths, [], []) -> [{{X, Y}, random:uniform(20)} || {X, Y} <- Paths];
 calc_distance(_Paths, [], Result) -> Result;
 calc_distance(Paths, [EH|ET], Result) ->
     calc_distance(Paths, ET, find_way(Paths,EH,Result)).

@@ -1,11 +1,11 @@
 -module(rabbit).
 -extends(animal).
--define(CELL, "pink").
+-define(CELL, "grey").
 -define(STARVE, 100).
 -define(REPRO_RATE, 6).
 -define(HUNGER, 5).
 -define(REPRO_AGE, 3).
--define(SPEED, 1).
+-define(SPEED, 3).
 -define(FOOD, [grass]).
 -define(ENEMIES, [fox]).
 -define(SIGHT, 2).
@@ -16,19 +16,15 @@ init({X, Y}) ->
     loop({{X, Y}, 0, 0, 0, 0}).
 
 % THERE ARE SEVERAL STATES A ANIMAL CAN BE IN, THESE ARE:
-% 1. dead by starvation
+% 1. dead by starvation ***DONE
 % 2. move/flee, eat, reproduce
-% 3. eat, reproduce
+% 3. eat, reproduce **DONE
 % 4. move/flee, eat
 % 5. move/flee
 % 6. eat
 % 7. no actions
 % THESE STATES SHOULD BE CHECKED IN THE ABOVE ORDER I BELIEVE
 tick({{X, Y}, _Speed, ?STARVE, _Age, _Repro}) ->
-    % Unnecessary because is in macro in Simulator and ?DEF is good if only
-    % defined at one location so that it doesn't need to be changed on
-    % several places in case you do some background switch
-    % frame ! {change_cell, X, Y, ?DEF},
     simulator ! {kill, {X, Y}},
     exit(normal);
 tick({Coordinate, Speed, Hunger, Age, Repro}) when Hunger > ?HUNGER ->

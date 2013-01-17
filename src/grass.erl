@@ -2,7 +2,7 @@
 -extends(object).
 -behaviour(plant).
 -export([loop/1, init/1]).
--define(REPRO_RATE, 5).
+-define(REPRO_RATE, 10).
 -define(LOOKUP(X, Y), ets:lookup(grid, {X, Y})).
 -define(CELL, "green").
 
@@ -10,7 +10,7 @@
 init(Coordinate) ->
     {X, Y} = Coordinate,
     frame ! {change_cell, X, Y, ?CELL},
-    loop({Coordinate, ?REPRO_RATE}).
+    loop({Coordinate, 0}).
 
 
 % Changes state. returns new state.
