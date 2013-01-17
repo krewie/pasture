@@ -22,6 +22,7 @@ qsort([ {Coor,D} | T]) ->
 %Paths och fiende listan är strukturerad på följande sätt: 
 %[ {{X,Y}, [{{X,Y}, Module, PID}]} ... ]
 
+calc_distance(Paths, [], []) -> [{{X, Y}, 0} || {{X, Y}, _} <- Paths];
 calc_distance(_Paths, [], Result) -> Result;
 calc_distance(Paths, [EH|ET], Result) ->
     calc_distance(Paths, ET, find_way(Paths,EH,Result)).
@@ -32,14 +33,16 @@ find_way([],_Enemy,_Res) -> [];
 find_way([PH|PT],Enemy,[]) ->
     {{X1,Y1}, _} = PH,
     {{X2,Y2}, _} = Enemy,
-    Distance = erlang:round(math:sqrt(math:pow((X2 - X1),2)
-                                      + math:pow((Y2 - Y1),2))),
+    Xres = abs(X1-X2),
+    Yres = abs(Y1-Y2),
+    Distance = max(Xres, Yres),
     [{{X1,Y1},Distance} | find_way(PT, Enemy, [])];
 find_way([PH|PT],Enemy,[HR|TR]) ->
     {{X1,Y1}, _} = PH,
     {{X2,Y2}, _} = Enemy,
-    Distance = erlang:round(math:sqrt(math:pow((X2 - X1),2)
-                                      + math:pow((Y2 - Y1),2))),
+    Xres = abs(X1-X2),
+    Yres = abs(Y1-Y2),
+    Distance = max(Xres, Yres),
     {{_X,_Y}, Old_Dis} = HR,
     case Old_Dis > Distance of
         true -> [{{X1,Y1},Distance} | find_way(PT, Enemy, TR)];
@@ -49,30 +52,16 @@ find_way([PH|PT],Enemy,[HR|TR]) ->
 % Låter modulen / djuret göra nödvändiga drag beroende på
 % situation.
 
-%choice(State,Module,Cell,Food,Enemies) ->
-%    {Coordinate, Sight, Speed, Hunger, Age, Repro} = State,
-%    Neighbors = creature:get_neighbours(Coordinate, Sight),
-%    Empty = creature:get_all_empty(Neighbors),
-%    Enemy_present = creature:get_of_types(Neighbors, Enemies),
-%    Food_present = creature:get_of_types(Neighbors, Food),
-%    case Hunger =< ?HUNGRY of 
-%        true -> 
-%            Random_food = object:get_random(Food_present),
-%            case Random_food /= [] of
-%                true ->
-%                    {{X,Y},[{{_X,_Y}, _Module, PID}]} = Random_food,
-%                    eat({X,Y}, PID)
-%            end
-%    end,
-%    case lists:length(Enemy_present) /= [] of
-%        true -> 
-%            Distance = creature:calc_distance(Empty, Enemy_present, []),
-%            case Distance /= [] of                                 
-%                true ->
-%                    [{Coor, _Distance}|T] = creature:qsort(Distance)
-%            end
-%    end.
-
+choice(State,Food,Enemies) ->
+   {Coordinate, Sight, Speed, Hunger, Age, Repro} = State,
+   Neighbors = creature:get_neighbours(Coordinate, 1),
+   View = creature:get_neighbours(Coordinate, Sight),
+   Empty = creature:get_all_empty(Neighbors),
+   Enemy_present = creature:get_of_types(View, Enemies),
+   Food_present = creature:get_of_types(View, Food),
+   DistanceList = creature:calc_distance(Empty, Food_present, []),
+   lists:reverse(creature:qsort(DistanceList)).
+   
     % What to do when there are no food / not time to eat OR
     % when there are no enemies to evade ?.
 
