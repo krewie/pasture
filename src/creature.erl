@@ -8,7 +8,9 @@
 
 qsort([]) -> [];
 qsort([ {Coor,D} | T]) -> 
-   qsort([ {_Coor,D1} || {_Coor,D1} <- T, D1 > D ]) ++ [{Coor, D}] ++ qsort([ {_Coor,D1} || {_Coor,D1} <- T, D1 =< D ]).
+   qsort([ {_Coor,D1} || {_Coor,D1} <- T, D1 > D ]) ++
+         [{Coor, D}] ++
+         qsort([ {_Coor,D1} || {_Coor,D1} <- T, D1 =< D ]).
 
 % Returnerar en lista med koordinater till tomma platser 
 % och distansen från den tomma platsen till fienderna
@@ -30,17 +32,19 @@ find_way([],_Enemy,_Res) -> [];
 find_way([PH|PT],Enemy,[]) ->
     {{X1,Y1}, _} = PH,
     {{X2,Y2}, _} = Enemy,
-    Distance = erlang:round(math:sqrt(math:pow((X2 - X1),2) + math:pow((Y2 - Y1),2))),
+    Distance = erlang:round(math:sqrt(math:pow((X2 - X1),2)
+                                      + math:pow((Y2 - Y1),2))),
     [{{X1,Y1},Distance} | find_way(PT, Enemy, [])];
 find_way([PH|PT],Enemy,[HR|TR]) ->
     {{X1,Y1}, _} = PH,
     {{X2,Y2}, _} = Enemy,
-    Distance = erlang:round(math:sqrt(math:pow((X2 - X1),2) + math:pow((Y2 - Y1),2))),
+    Distance = erlang:round(math:sqrt(math:pow((X2 - X1),2)
+                                      + math:pow((Y2 - Y1),2))),
     {{_X,_Y}, Old_Dis} = HR,
     case Old_Dis > Distance of
         true -> [{{X1,Y1},Distance} | find_way(PT, Enemy, TR)];
         false -> [{{X1,Y1},Old_Dis} | find_way(PT, Enemy, TR)]  
-    end. 
+    end.
 
 % Låter modulen / djuret göra nödvändiga drag beroende på
 % situation.

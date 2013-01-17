@@ -65,7 +65,6 @@ trav_ets(Message) -> ets:foldl(fun({{_X,_Y}, _Object, PID}, Accin) ->
 
 
 step() ->
-    %% traversera ets på nåt sätt? %%
     trav_ets({tick}),
     loop().
 
@@ -83,7 +82,7 @@ loop() ->
         {move, PID, Module, {OldX, OldY}, {NewX, NewY}, Color} ->
             case ?LOOKUP(NewX, NewY) of
                 [] ->   ?MOVE_OBJECT(Module, OldX, OldY, NewX, NewY, PID),
-                        frame ! {change_cell, OldX, OldY, "white"},
+                        frame ! {change_cell, OldX, OldY, ?DEF},
                         frame ! {change_cell, NewX, NewY, Color},
                         PID ! {move_ok};
                 _ -> PID ! {move_error}
@@ -91,9 +90,9 @@ loop() ->
             loop();
         {eat, PID, Module, {OldX, OldY}, {NewX, NewY}, Color} ->
             ?MOVE_OBJECT(Module, OldX, OldY, NewX, NewY, PID),
-                        frame ! {change_cell, OldX, OldY, "white"},
-                        frame ! {change_cell, NewX, NewY, Color},
-                        PID ! {eat_ok},
+            frame ! {change_cell, OldX, OldY, ?DEF},
+            frame ! {change_cell, NewX, NewY, Color},
+            PID ! {eat_ok},
             loop();
         {kill, PID, {X, Y}} ->
             ?KILL(X, Y),
@@ -101,5 +100,5 @@ loop() ->
             loop();
 	    _ -> loop()
     after 1500 ->
-	    step()	
+	    step()
     end.
