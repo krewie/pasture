@@ -33,23 +33,20 @@ init({X, Y}) ->
 % 7. eat (DONE)
 % 8. no actions (DONE)
 % THESE STATES SHOULD BE CHECKED IN THE ABOVE ORDER I BELIEVE
-% REALIZED NOW THAT THIS SHOULD BE HANDELD IN CHOICE()
 tick({Coordinate, _Speed, ?STARVE, _Age, _Repro}) ->
-    % 1. dead by starvation
     simulator ! {kill, Coordinate},
     exit(normal);
-tick({Coordinate, 0, Hunger, ?REPRO_AGE, ?REPRO_RATE}) when Hunger > ?HUNGER ->
-    % 2.1 move/flee, eat, reproduce
+tick({Coordinate, Speed, Hunger, Age, Repro}) when Hunger > ?HUNGER ->
     io:format("~p: hungry, trying to eat... ~n", [Coordinate]),
     Neighbours = fox:get_neighbours(Coordinate, ?SIGHT),
     Food = fox:get_of_types(Neighbours, ?FOOD),
-    Empty = fox:get_all_empty(Neighbours),
-    Empty_Random = fox:randomize_list(List),
     Eat_Result = fox:eat(Coordinate, Food, ?MODULE, ?CELL),
     case Eat_Result of
         fail ->
             case Speed > ?SPEED of
                 true ->
+                    Empty = fox:get_all_empty(Neighbours),
+                    Empty_Random = fox:randomize_list(Empty),
                     % Could handle if should flee or not?
                     Move_Result = fox:move(Coordinate, Empty_Random,
                                            ?MODULE, ?CELL),
@@ -63,75 +60,38 @@ tick({Coordinate, 0, Hunger, ?REPRO_AGE, ?REPRO_RATE}) when Hunger > ?HUNGER ->
                     simulator ! {reproduce_eat, self(), ?MODULE, NewCoordinate},
                     case Speed > ?SPEED of
                         true ->
-                            
-                        _ -> fail
-                    end,
-                    {Coordinate, Speed+1, 0, Age+1, 0};
+                            TempNeigh = fox:get_neighbours(Coordinate, ?SIGHT),
+                            Empty = fox:get_all_empty(TempNeigh),
+                            Empty_Random = fox:randomize_list(Empty),
+                            Move_Result = fox:move(Coordinate, Empty_Random,
+                                                   ?MODULE, ?CELL),
+                            {Move_Result, 0, 0, Age+1, 0};
+                        _ -> {Coordinate, Speed+1, 0, Age+1, 0}
+                    end;
                 _ ->
-
-
-    {Coordinate, ?SPEED, ?HUNGER+5, ?REPRO_AGE, 0};
-tick({Coordinate, 0, Hunger, ?REPRO_AGE, Repro})
-  when Hunger < ?HUNGER ->
-    % 2.2 move/flee, eat, reproduce
-    {Coordinate, ?SPEED, ?HUNGER+5, ?REPRO_AGE, Repro+1};
-tick({Coordinate, 0, Hunger, ?REPRO_AGE, ?REPRO_RATE}) ->
-    % 3.1. move/flee, reproduce
-    {Coordinate, ?SPEED, Hunger-1, ?REPRO_AGE, ?REPRO_RATE};
-tick({Coordinate, 0, Hunger, ?REPRO_AGE, Repro}) ->
-    % 3.2. move/flee, reproduce
-    {Coordinate, ?SPEED, Hunger-1, ?REPRO_AGE, Repro+1};
-tick({Coordinate, Speed, Hunger, ?REPRO_AGE, ?REPRO_RATE})
-  when Hunger < ?HUNGER ->
-    % 4.1 eat, reproduce (positvie)
-    Neighbours = fox:get_neighbours(Coordinate, 1),
-    Food = fox:get_of_types(Neighbours, ?FOOD),
-    Eat_Result = fox:eat(Coordinate, Food, ?MODULE, ?CELL),
-    case Eat_Result of
-        fail -> {Coordinate, Speed-1, Hunger-1, ?REPRO_AGE, ?REPRO_RATE};
-        NewCoordinate ->
-            Repro_Result = fox:reproduce(NewCoordinate, ?MODULE),
-            case Repro_Result of
-                error ->
-                    {NewCoordinate, Speed-1, ?HUNGER+5, ?REPRO_AGE, ?REPRO_RATE};
-                ok -> {NewCoordinate, Speed-1, ?HUNGER+5, ?REPRO_AGE, 0}
+                    case Speed > ?SPEED of
+                        true ->
+                            simulator ! {move_eat, self(), ?MODULE, Coordinate,
+                                         NewCoordinate, ?CELL},
+                            {NewCoordinate, 0, 0, Age+1, Repro+1};
+                        _ ->
+                            simulator ! {eat, self(), ?MODULE, Coordinate,
+                                         NewCoordinate, ?CELL},
+                            {NewCoordinate, Speed+1, 0, Age+1, Repro+1}
+                    end
             end
     end;
-tick({Coordinate, Speed, Hunger, ?REPRO_AGE, Repro})
-  when Hunger < ?HUNGER ->
-    % 4.2 eat, reproduce (negative)
-    Neighbours = fox:get_neighbours(Coordinate, 1),
-    Food = fox:get_of_types(Neighbours, ?FOOD),
-    Eat_Result = fox:eat(Coordinate, Food, ?MODULE, ?CELL),
-    case Eat_Result of
-        fail -> {Coordinate, Speed-1, Hunger-1, ?REPRO_AGE, Repro+1};
-        NewCoordinate -> {NewCoordinate, Speed, ?HUNGER+5, ?REPRO_AGE, Repro+1}
-    end;
-tick({{X, Y}, 0, Hunger, Age, Repro})
-  when Hunger < ?HUNGER ->
-    % 5. move/flee, eat
-    {{X, Y}, ?SPEED, ?HUNGER+5, Age, Repro};
-tick({Coordinate, 0, Hunger, Age, Repro}) ->
-    % 6. move/flee
-    Neighbours = fox:get_neighbours(Coordinate, 1),
-    Empty = fox:get_all_empty(Neighbours),
-    Empty_Random = [X || {_, X} <- list:sort(
-                                     [ {random:uniform(), N} || N <- Empty ])],
-    Move_Result = fox:move(Coordinate, Empty_Random, ?MODULE, ?CELL),
-    {Move_Result, Speed, Hunger-1, Age+1, Repro};
-tick({Coordinate, Speed, Hunger, Age, Repro})
-  when Hunger < ?HUNGER ->
-    % 7. eat
-    Neighbours = fox:get_neighbours(Coordinate, 1),
-    Food = fox:get_of_types(Neighbours, ?FOOD),
-    Eat_Result = fox:eat(Coordinate, Food, ?MODULE, ?CELL),
-    case Eat_Result of
-        fail -> {Coordinate, Speed-1, Hunger-1, Age+1, Repro};
-        NewCoordinate -> {NewCoordinate, Speed, ?HUNGER+5, Age+1, Repro}
-    end;
-tick({Coordinate, Speed, Hunger, Age, Repro})->
-    % 8. no actions
-    {Coordinate, Speed-1, Hunger-1, Age, Repro}.
+tick({Coordinate, Speed, Hunger, Age, Repro}) ->
+    case Speed > ?SPEED of
+        true ->
+            Neighbours = fox:get_neighbours(Coordinate, ?SIGHT),
+            Empty = fox:get_all_empty(Neighbours),
+            Empty_Random = fox:randomize_list(Empty),
+            Move_Result = fox:move(Coordinate, Empty_Random, ?MODULE, ?CELL),
+            {Move_Result, 0, Hunger+1, Age+1, Repro+1};
+        _ ->
+            {Coordinate, Speed+1, Hunger+1, Age+1, Repro+1}
+    end.
 
 
 loop(State) ->
@@ -142,7 +102,7 @@ loop(State) ->
             loop(NewState);
         {get_eaten, PID, Coordinate} ->
             PID ! {eat_ok};
-        {get_eaten, PID {_X, _Y}} ->
+        {get_eaten, PID, {_X, _Y}} ->
             PID ! {eat_error},
             loop(State)
     end.
