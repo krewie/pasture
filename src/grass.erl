@@ -17,7 +17,6 @@ init(Coordinate) ->
 tick({Coordinate, Reproduction}) when Reproduction > ?REPRO_RATE ->
     Neighbors = grass:get_neighbours(Coordinate, 1),
     Empty = grass:get_all_empty(Neighbors),
-    io:format("~p: My Coordinate: ~p, My Neighbors: ~p ~n", [self(), Coordinate, Empty]),
     %Empty_Random = [X||{_,X} <- lists:sort([ {random:uniform(), N} || N <- Empty])],
     Repro_Result = reproduce(Empty),
     case Repro_Result of

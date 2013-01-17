@@ -1,5 +1,5 @@
 -module(object).
--export([get_neighbors/1, get_neighbours/2, get_types/2,get_of_types/2,get_occupied/1,
+-export([get_neighbours/1, get_neighbours/2, get_types/2,get_of_types/2,get_occupied/1,
          get_first_empty/1,get_all_empty/1, get_random/1]).
 -define(LOOKUP(X, Y), ets:lookup(grid, {X, Y})).
 
@@ -25,7 +25,7 @@ get_types(Neighbors, [H|T]) ->
 % retreive the adjecent areas of X, Y.
 % returns it as a list of tuples, structured as
 % {{X-coordinate, Y-coordinate}, Object}
-get_neighbors({X, Y}) ->
+get_neighbours({X, Y}) ->
 	[{{X-1, Y-1}, ?LOOKUP(X-1, Y-1)}, {{X, Y-1}, ?LOOKUP(X, Y-1)},
          {{X+1, Y-1}, ?LOOKUP(X+1, Y-1)}, {{X-1, Y},?LOOKUP(X-1, Y)},
          {{X+1, Y}, ?LOOKUP(X+1, Y)}, {{X-1, Y+1}, ?LOOKUP(X-1, Y+1)},

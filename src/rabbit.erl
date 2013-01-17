@@ -8,7 +8,7 @@
 -define(SPEED, 1).
 -define(FOOD, [grass]).
 -define(ENEMIES, [fox]).
--define(SIGHT, 1).
+-define(SIGHT, 2).
 -export([init/1]).
 
 init({X, Y}) ->
@@ -33,16 +33,18 @@ tick({{X, Y}, _Speed, ?STARVE, _Age, _Repro}) ->
     exit(normal);
 tick({Coordinate, Speed, Hunger, Age, Repro}) when Hunger > ?HUNGER ->
     %try to eat
-    io:format("~p: hungry, trying to eat... ~n", [Coordinate]),
-    Neighbours = rabbit:get_neighbours(Coordinate, ?SIGHT),
+    Neighbours = rabbit:get_neighbours(Coordinate),
     Food = rabbit:get_of_types(Neighbours, ?FOOD),
     Eat_Result = rabbit:eat(Coordinate, Food, ?MODULE, ?CELL),
     case Eat_Result of
         fail -> 
+            io:format("Could not eat ~n"),
             case Speed > ?SPEED of
                 true ->
-                    Move_List = rabbit:choice(State, ?FOOD, ?ENEMIES),
-                    NewCoordinate = rabbit:move(Coordinate, MovementList);
+                    Move_List = rabbit:choice({Coordinate, ?SIGHT, Speed, Hunger, Age, Repro}, ?FOOD, ?ENEMIES),
+                    io:format("trying to move to: ~p ~n", [Move_List]),
+                    NewCoordinate = rabbit:move(Coordinate, Move_List, ?MODULE, ?CELL),
+                    {NewCoordinate, 0, Hunger+1, Age+1, Repro+1};
                 _ ->
                     {Coordinate, Speed+1, Hunger+1, Age+1, Repro+1}
             end;
