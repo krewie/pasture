@@ -42,14 +42,18 @@ create_object(N, Module, Xbound, Ybound) ->
 
 init() ->
     %%lägga till spawnade object också %%
+    init(?WIDTH, ?HEIGHT).
+
+init(Width, Height) ->
     io:format("Init simulator~n",[]),
     register(simulator, 
-             spawn_link(simulator, setup, [[?WIDTH, ?HEIGHT, 4, 6]])).
-
+             spawn_link(simulator, setup, [[Width, Height, 4, 6]])).
 
 setup([Width, Height, Animals, Plants]) ->
     frame ! {set_w, Width},
     frame ! {set_h, Height},
+    frame ! {set_head, "Pasture Simulator 0.1"},
+    frame ! {set_foot, ""},
     field(Height, Width),
     create_object(4, rabbit, Width, Height),
     create_object(4, grass, Width, Height),

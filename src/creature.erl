@@ -55,7 +55,7 @@ find_way([PH|PT],Enemy,[HR|TR]) ->
 % situation.
 
 choice(State,Food,Enemies,Starv) ->
-    {Coordinate, Sight, Speed, Hunger, Age, Repro} = State,
+    {Coordinate, Sight, _Speed, Hunger, _Age, _Repro} = State,
     Neighbors = creature:get_neighbours(Coordinate),
     View = creature:get_neighbours(Coordinate, Sight),
     Empty = creature:get_all_empty(Neighbors),
