@@ -8,9 +8,9 @@
 
 qsort([]) -> [];
 qsort([ {Coor,D} | T]) -> 
-   qsort([ {_Coor,D1} || {_Coor,D1} <- T, D1 > D ]) ++
+   qsort([ {_Coor,D1} || {_Coor,D1} <- T, D1 =< D ]) ++
          [Coor] ++
-         qsort([ {_Coor,D1} || {_Coor,D1} <- T, D1 =< D ]).
+         qsort([ {_Coor,D1} || {_Coor,D1} <- T, D1 > D ]).
 
 % Returnerar en lista med koordinater till tomma platser 
 % och distansen från den tomma platsen till fienderna
@@ -22,7 +22,7 @@ qsort([ {Coor,D} | T]) ->
 %Paths och fiende listan är strukturerad på följande sätt: 
 %[ {{X,Y}, [{{X,Y}, Module, PID}]} ... ]
 
-calc_distance(Paths, [], []) -> [{{X, Y}, random:uniform(20)} || {X, Y} <- Paths];
+calc_distance(Paths, [], []) -> [{{X, Y}, 10} || {X, Y} <- Paths];
 calc_distance(_Paths, [], Result) -> Result;
 calc_distance(Paths, [EH|ET], Result) ->
     calc_distance(Paths, ET, find_way(Paths,EH,Result)).
@@ -54,11 +54,9 @@ find_way([PH|PT],Enemy,[HR|TR]) ->
 % Låter modulen / djuret göra nödvändiga drag beroende på
 % situation.
 
-calc_fitness([],[],_Starv) -> [];
-calc_fitness([FH|FT],[EH|ET],Starv) ->
-    {{X1,Y1}, D1} = FH,
-    {{_X2,_Y2}, D2} = EH,
-    [{{X1,Y1}, D1 * Starv - D2 * Starv} | calc_fitness(FT, ET, Starv) ].
+calc_fitness([],[],_Starve) -> [];
+calc_fitness([{{X1,Y1}, D1}|FT],[{{X1,Y1}, D2}|ET],Starve) ->
+    [{{X1,Y1}, (D1 * Starve) - (D2 * Starve)} | calc_fitness(FT, ET, Starve) ].
 
 choice(State,Food,Enemies,Starv) ->
     {Coordinate, Sight, _Speed, Hunger, _Age, _Repro} = State,
