@@ -55,6 +55,7 @@ setup([Width, Height, Animals, Plants]) ->
     frame ! {set_head, "Pasture Simulator 0.1"},
     frame ! {set_foot, ""},
     field(Height, Width),
+    create_object(4, rock, Width, Height),
     create_object(4, rabbit, Width, Height),
     create_object(4, grass, Width, Height),
     create_object(4, fox, Width, Height),

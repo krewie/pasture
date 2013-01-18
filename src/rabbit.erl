@@ -1,6 +1,6 @@
 -module(rabbit).
 -extends(animal).
--define(CELL, "grey").
+-define(CELL, "pink").
 -define(STARVE, 100).
 -define(REPRO_RATE, 6).
 -define(HUNGER, 5).
