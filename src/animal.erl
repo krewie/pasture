@@ -65,13 +65,22 @@ tick({Coordinate, Speed, Hunger, Age, Repro},
     end;
 tick(State, Constants) ->
     {Coordinate, Speed, Hunger, Age, Repro} = State,
-    {_, _, _, Speed_C, _, _, _, _, Module_C, Color_C} = Constants,
+    {_, _, Sight_C, Speed_C, _, _, _, Enemies_C, Module_C, Color_C} = Constants,
+    %Not hungry, will flee
     case Speed > Speed_C of
         true ->
-            Neighbors = animal:get_neighbours(Coordinate),
-            Empty = animal:get_all_empty(Neighbors),
-            Empty_Random = animal:randomize_list(Empty),
-            Move_Result = animal:move(Coordinate, Empty_Random, Module_C, Color_C),
+    		Neighbors = creature:get_neighbours(Coordinate),
+    		View = creature:get_neighbours(Coordinate, Sight_C),
+    		Empty = creature:get_all_empty(Neighbors),
+            Enemy_present = creature:get_of_types(View, Enemies_C),
+            case Enemy_present of 
+            	[] -> 
+            		MoveList = animal:randomize_list(Empty);
+            	_ -> 
+            EnemyDistanceList = creature:calc_distance(Empty, Enemy_present, []),
+        	MoveList = animal:qsort(EnemyDistanceList)
+        	end,
+            Move_Result = animal:move(Coordinate, MoveList, Module_C, Color_C),
             {Move_Result, 0, Hunger+1, Age+1, Repro+1};
         _ ->
             {Coordinate, Speed+1, Hunger+1, Age+1, Repro+1}

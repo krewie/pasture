@@ -60,9 +60,9 @@ setup([Width, Height, Animals, Plants]) ->
     field(Height, Width),
     random:seed(erlang:now()),
     Occupied = create_object(4, rock, Width, Height, []),
-    Occupied2 = create_object(4, rabbit, Width, Height, Occupied),
-    Occupied3 = create_object(4, grass, Width, Height, Occupied2),
-    create_object(4, fox, Width, Height, Occupied3),
+    Occupied2 = create_object(Animals, rabbit, Width, Height, Occupied),
+    Occupied3 = create_object(Plants, grass, Width, Height, Occupied2),
+    create_object(Animals, fox, Width, Height, Occupied3),
     step().
 
 
@@ -82,7 +82,7 @@ step() ->
 
 loop() ->
     receive
-        {reproduce_eat, PID, Module, {X, Y}} ->
+        {reproduce_eat, _PID, Module, {X, Y}} ->
             ?PUT_OBJECT(Module, X, Y),
             loop();
         {reproduce, PID, Module, {X, Y}} -> 
@@ -117,6 +117,6 @@ loop() ->
             ?KILL(X, Y),
             loop();
 	    _ -> loop()
-    after 1500 ->
+    after 500 ->
 	    step()
     end.

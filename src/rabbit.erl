@@ -1,10 +1,10 @@
 -module(rabbit).
 -extends(animal).
 -define(CELL, "pink").
--define(STARVE, 100).
--define(REPRO_RATE, 6).
--define(HUNGER, 5).
--define(REPRO_AGE, 3).
+-define(STARVE, 80).
+-define(REPRO_RATE, 7).
+-define(HUNGER, 20).
+-define(REPRO_AGE, 10).
 -define(SPEED, 3).
 -define(FOOD, [grass]).
 -define(ENEMIES, [fox]).

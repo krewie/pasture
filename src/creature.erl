@@ -59,7 +59,7 @@ calc_fitness([{{X1,Y1}, D1}|FT],[{{X1,Y1}, D2}|ET],Starve) ->
     [{{X1,Y1}, (D1 * Starve) - (D2 * Starve)} | calc_fitness(FT, ET, Starve) ].
 
 choice(State,Food,Enemies,Starv) ->
-    {Coordinate, Sight, _Speed, Hunger, _Age, _Repro} = State,
+    {Coordinate, Sight, _Speed, _Hunger, _Age, _Repro} = State,
     Neighbors = creature:get_neighbours(Coordinate),
     View = creature:get_neighbours(Coordinate, Sight),
     Empty = creature:get_all_empty(Neighbors),
@@ -78,11 +78,15 @@ choice(State,Food,Enemies,Starv) ->
 
     Enemy_present = creature:get_of_types(View, Enemies),
     Food_present = creature:get_of_types(View, Food),
-
-    FoodDistanceList = creature:calc_distance(Empty, Food_present, []),
-    EnemyDistanceList = creature:calc_distance(Empty, Enemy_present, []),
-    
-    creature:qsort(creature:calc_fitness(FoodDistanceList, EnemyDistanceList, Starv)).
+    %if it has no choice to walk towards, go to random
+    case (Enemy_present ++ Food_present) of
+        [] -> 
+            creature:randomize_list(Empty);
+        _ ->
+        FoodDistanceList = creature:calc_distance(Empty, Food_present, []),
+        EnemyDistanceList = creature:calc_distance(Empty, Enemy_present, []),
+        creature:qsort(creature:calc_fitness(FoodDistanceList, EnemyDistanceList, Starv))
+    end.
     % What to do when there are no food / not time to eat OR
     % when there are no enemies to evade ?.
 
