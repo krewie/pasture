@@ -54,13 +54,26 @@ find_way([PH|PT],Enemy,[HR|TR]) ->
 
 choice(State,Food,Enemies) ->
    {Coordinate, Sight, Speed, Hunger, Age, Repro} = State,
-   Neighbors = creature:get_neighbours(Coordinate, 1),
+   Neighbors = creature:get_neighbours(Coordinate),
    View = creature:get_neighbours(Coordinate, Sight),
    Empty = creature:get_all_empty(Neighbors),
+
+   % If 'Empty' = [] then we only need to check for food that is as far away
+   % from an enemy as possible, but should there be empty areas we need to
+   % decide wether eating is of higher concern that fleeing, this might occur
+   % when 'Hunger' is close to ?STARVE (maybe should be passed as parameter).
+   % 1. If we decide to eat, then find food that is as close as possible
+   % 2. If we decide to flee, then move to the empty space that is as far away
+   %    from an enemy as possible
+   % My idea is a function that take two lists: *Enemies and *Cells
+   % Were we try to find the/those cells in *Cells that is as far away from
+   % all the enemies in *Enemies
+   % Maybe that is what calc_distance does, but I'm not sure
+
    Enemy_present = creature:get_of_types(View, Enemies),
    Food_present = creature:get_of_types(View, Food),
    DistanceList = creature:calc_distance(Empty, Food_present, []),
-   io:format("Neighbours: ~p ~n, Empty ~p, View: ~p ~n Food_present: ~p ~n DistanceList: ~p ~n", [Neighbors, Empty, View, Food_present, DistanceList]),
+   %io:format("Neighbours: ~p ~n, Empty ~p, View: ~p ~n Food_present: ~p ~n DistanceList: ~p ~n", [Neighbors, Empty, View, Food_present, DistanceList]),
    lists:reverse(creature:qsort(DistanceList)).
    
     % What to do when there are no food / not time to eat OR
@@ -88,7 +101,7 @@ eat(Coordinate, [{NewCoordinate, [{NewCoordinate, _, PID}]}|T], Module, Color) -
     end.
 
 reproduce(Coordinate, Object) ->
-    Neighbors = creature:get_neighbors(Coordinate),
+    Neighbors = creature:get_neighbours(Coordinate),
     Empty = creature:get_all_empty(Neighbors),
     Coor = creature:get_random(Empty),
     case Coor of

@@ -11,9 +11,13 @@
 -define(SIGHT, 2).
 -export([init/1]).
 
+% A thought is that if we initiate them with ?REPRO_RATE then as soon
+% as they are in ?REPRO_AGE they are able to breed and then we reset it to 0.
+% That way the ?REPRO_RATE will remain intact, becaue now when it reaches
+% ?REPRO_AGE then we have that the ?REPRO_RATE is equally large as ?REPRO_AGE
 init({X, Y}) ->
     frame ! {change_cell, X, Y, ?CELL},
-    loop({{X, Y}, 0, 0, 0, 0}).
+    loop({{X, Y}, 0, 0, 0, ?REPRO_RATE}).
 
 % THERE ARE SEVERAL STATES A ANIMAL CAN BE IN, THESE ARE:
 % 1. dead by starvation ***DONE
@@ -34,12 +38,15 @@ tick({Coordinate, Speed, Hunger, Age, Repro}) when Hunger > ?HUNGER ->
     Eat_Result = rabbit:eat(Coordinate, Food, ?MODULE, ?CELL),
     case Eat_Result of
         fail -> 
-            io:format("Could not eat ~n"),
+            %io:format("Could not eat ~n"),
             case Speed > ?SPEED of
                 true ->
-                    Move_List = rabbit:choice({Coordinate, ?SIGHT, Speed, Hunger, Age, Repro}, ?FOOD, ?ENEMIES),
-                    io:format("trying to move to: ~p ~n", [Move_List]),
-                    NewCoordinate = rabbit:move(Coordinate, Move_List, ?MODULE, ?CELL),
+                    Move_List = rabbit:choice({Coordinate, ?SIGHT,
+                                               Speed, Hunger, Age, Repro},
+                                              ?FOOD, ?ENEMIES),
+                    %io:format("trying to move to: ~p ~n", [Move_List]),
+                    NewCoordinate = rabbit:move(
+                                      Coordinate, Move_List, ?MODULE, ?CELL),
                     {NewCoordinate, 0, Hunger+1, Age+1, Repro+1};
                 _ ->
                     {Coordinate, Speed+1, Hunger+1, Age+1, Repro+1}
@@ -48,7 +55,16 @@ tick({Coordinate, Speed, Hunger, Age, Repro}) when Hunger > ?HUNGER ->
             case Repro > ?REPRO_RATE andalso Age > ?REPRO_AGE of
                 true ->
                     simulator ! {reproduce_eat, self(), ?MODULE, NewCoordinate},
-                    {Coordinate, Speed+1, 0, Age+1, 0};
+                    case Speed > ?SPEED of
+                        true ->
+                            Move_List = rabbit:choice({Coordinate, ?SIGHT,
+                                                       Speed, 0, Age, Repro},
+                                                      ?FOOD, ?ENEMIES),
+                            MoveCoordinate = rabbit:move(Coordinate, Move_List,
+                                                         ?MODULE, ?CELL),
+                            {MoveCoordinate, 0, 0, Age+1, 0};
+                        _ -> {Coordinate, Speed+1, 0, Age+1, 0}
+                    end;
                 _ -> 
                     case Speed > ?SPEED of
                         true -> 
@@ -67,8 +83,8 @@ tick(State) ->
     case Speed > ?SPEED of
         true ->
             Neighbors = rabbit:get_neighbours(Coordinate, 1),
-            Empty = creature:get_all_empty(Neighbors),
-            Empty_Random = [X||{_,X} <- lists:sort([ {random:uniform(), N} || N <- Empty])],
+            Empty = rabbit:get_all_empty(Neighbors),
+            Empty_Random = rabbit:randomize_list(Empty),
             Move_Result = rabbit:move(Coordinate, Empty_Random, ?MODULE, ?CELL),
             {Move_Result, 0, Hunger+1, Age+1, Repro+1};
         _ ->
