@@ -42,7 +42,7 @@ tick({Coordinate, Speed, Hunger, Age, Repro}) when Hunger > ?HUNGER ->
                 true ->
                     Move_List = fox:choice({Coordinate, ?SIGHT,
                                             Speed, Hunger, Age, Repro},
-                                           ?FOOD, ?ENEMIES),
+                                           ?FOOD,?ENEMIES,?STARVE - Hunger),
                     %io:format("trying to move to: ~p ~n", [Move_List]),
                     NewCoordinate = fox:move(
                                       Coordinate, Move_List, ?MODULE, ?CELL),
@@ -58,7 +58,7 @@ tick({Coordinate, Speed, Hunger, Age, Repro}) when Hunger > ?HUNGER ->
                         true ->
                             Move_List = fox:choice({Coordinate, ?SIGHT,
                                                     Speed, 0, Age, Repro},
-                                                   ?FOOD,?STARVE ,?ENEMIES),
+                                                   ?FOOD,?ENEMIES,?STARVE - Hunger),
                             MoveCoordinate = fox:move(Coordinate, Move_List,
                                                       ?MODULE, ?CELL),
                             {MoveCoordinate, 0, 0, Age+1, 0};

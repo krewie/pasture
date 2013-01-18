@@ -43,7 +43,7 @@ tick({Coordinate, Speed, Hunger, Age, Repro}) when Hunger > ?HUNGER ->
                 true ->
                     Move_List = rabbit:choice({Coordinate, ?SIGHT,
                                                Speed, Hunger, Age, Repro},
-                                              ?FOOD, ?ENEMIES),
+                                              ?FOOD, ?ENEMIES,?STARVE - Hunger),
                     %io:format("trying to move to: ~p ~n", [Move_List]),
                     NewCoordinate = rabbit:move(
                                       Coordinate, Move_List, ?MODULE, ?CELL),
@@ -59,7 +59,7 @@ tick({Coordinate, Speed, Hunger, Age, Repro}) when Hunger > ?HUNGER ->
                         true ->
                             Move_List = rabbit:choice({Coordinate, ?SIGHT,
                                                        Speed, 0, Age, Repro},
-                                                      ?FOOD,?STARVE,?ENEMIES),
+                                                      ?FOOD,?ENEMIES,?STARVE - Hunger),
                             MoveCoordinate = rabbit:move(Coordinate, Move_List,
                                                          ?MODULE, ?CELL),
                             {MoveCoordinate, 0, 0, Age+1, 0};
