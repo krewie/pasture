@@ -1,14 +1,14 @@
 -module(fox).
 -extends(animal).
 -define(CELL, "orange").
--define(STARVE, 80).
+-define(STARVE, 100).
 -define(REPRO_RATE, 10).
--define(HUNGER, 20).
+-define(HUNGER, 10).
 -define(REPRO_AGE, 30).
 -define(SPEED, 2).
 -define(FOOD, [rabbit]).
 -define(ENEMIES, []).
--define(SIGHT, 4).
+-define(SIGHT, 5).
 -export([init/1]).
 
 init({X, Y}) ->

@@ -109,6 +109,8 @@ eat(Coordinate, [{NewCoordinate, [{NewCoordinate, _, PID}]}|T], Module, Color) -
         {eat_ok} -> NewCoordinate;
         {eat_error} ->
             eat(Coordinate, T, Module, Color)
+    after 300 ->
+            eat(Coordinate, T, Module, Color)
     end.
 
 reproduce(Coordinate, Object) ->

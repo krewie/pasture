@@ -2,8 +2,8 @@
 -extends(animal).
 -define(CELL, "pink").
 -define(STARVE, 80).
--define(REPRO_RATE, 7).
--define(HUNGER, 20).
+-define(REPRO_RATE, 15).
+-define(HUNGER, 5).
 -define(REPRO_AGE, 10).
 -define(SPEED, 3).
 -define(FOOD, [grass]).

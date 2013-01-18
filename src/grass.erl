@@ -2,7 +2,7 @@
 -extends(object).
 %-behaviour(plant).
 -export([loop/1, init/1]).
--define(REPRO_RATE, 20).
+-define(REPRO_RATE, 30).
 -define(LOOKUP(X, Y), ets:lookup(grid, {X, Y})).
 -define(CELL, "green").
 
