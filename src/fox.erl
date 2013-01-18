@@ -3,7 +3,7 @@
 -define(CELL, "orange").
 -define(STARVE, 100).
 -define(REPRO_RATE, 10).
--define(HUNGER, 10).
+-define(HUNGER, 30).
 -define(REPRO_AGE, 30).
 -define(SPEED, 2).
 -define(FOOD, [rabbit]).

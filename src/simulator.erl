@@ -50,7 +50,7 @@ init() ->
 init(Width, Height) ->
     io:format("Init simulator~n",[]),
     register(simulator, 
-             spawn_link(simulator, setup, [[Width, Height, 4, 6]])).
+             spawn_link(simulator, setup, [[Width, Height, 4, 9]])).
 
 setup([Width, Height, Animals, Plants]) ->
     frame ! {set_w, Width},
