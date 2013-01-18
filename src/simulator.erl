@@ -31,14 +31,17 @@ field(Height, Width) ->
     put_fences(Height-1, Height-1, Width-1).
 
 
-create_object(0, _Module, _Xbound, _Ybound) -> ok;
-create_object(N, Module, Xbound, Ybound) ->
-    random:seed(erlang:now()),
-    RandX = random:uniform(Xbound-2)+1,
-    RandY = random:uniform(Ybound-2)+1,
-    io:format("Creating ~p at ~p, ~p ~n", [Module, RandX, RandY]),
-    self() ! {reproduce, self(), Module, {RandX, RandY}},
-    create_object(N-1, Module, Xbound, Ybound).
+create_object(0, _Module, _Xbound, _Ybound, List) -> List;
+create_object(N, Module, Xbound, Ybound, List) ->
+    RandX = random:uniform(Xbound-3)+1,
+    RandY = random:uniform(Ybound-3)+1,
+    case lists:member({RandX, RandY}, List) of
+        true -> create_object(N, Module, Xbound, Ybound, List);
+        _ ->
+            io:format("Creating ~p at ~p, ~p ~n", [Module, RandX, RandY]),
+            self() ! {reproduce, self(), Module, {RandX, RandY}},
+            create_object(N-1, Module, Xbound, Ybound, [{RandX, RandY}|List])
+    end.
 
 init() ->
     %%lägga till spawnade object också %%
@@ -55,10 +58,11 @@ setup([Width, Height, Animals, Plants]) ->
     frame ! {set_head, "Pasture Simulator 0.1"},
     frame ! {set_foot, ""},
     field(Height, Width),
-    create_object(4, rock, Width, Height),
-    create_object(4, rabbit, Width, Height),
-    create_object(4, grass, Width, Height),
-    create_object(4, fox, Width, Height),
+    random:seed(erlang:now()),
+    Occupied = create_object(4, rock, Width, Height, []),
+    Occupied2 = create_object(4, rabbit, Width, Height, Occupied),
+    Occupied3 = create_object(4, grass, Width, Height, Occupied2),
+    create_object(4, fox, Width, Height, Occupied3),
     step().
 
 
