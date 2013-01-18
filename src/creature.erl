@@ -1,7 +1,7 @@
 -module(creature).
 -extends(object).
 -define(THRESHOLD, 10).
--export([move/4, reproduce/2, eat/4, find_way/3, calc_distance/3, qsort/1, choice/4]).
+-export([move/4, reproduce/2, eat/4, find_way/3, calc_distance/3, qsort/1, calc_fitness/3, choice/4]).
 
 %Sorterar en lista med element av följande struktur :
 % {{X,Y}, Distance} i fallande ordning.
@@ -54,6 +54,12 @@ find_way([PH|PT],Enemy,[HR|TR]) ->
 % Låter modulen / djuret göra nödvändiga drag beroende på
 % situation.
 
+calc_fitness([],[],_Starv) -> [];
+calc_fitness([FH|FT],[EH|ET],Starv) ->
+    {{X1,Y1}, D1} = FH,
+    {{_X2,_Y2}, D2} = EH,
+    [{{X1,Y1}, D1 * Starv - D2 * Starv} | calc_fitness(FT, ET, Starv) ].
+
 choice(State,Food,Enemies,Starv) ->
     {Coordinate, Sight, _Speed, Hunger, _Age, _Repro} = State,
     Neighbors = creature:get_neighbours(Coordinate),
@@ -74,12 +80,11 @@ choice(State,Food,Enemies,Starv) ->
 
     Enemy_present = creature:get_of_types(View, Enemies),
     Food_present = creature:get_of_types(View, Food),
-    DistanceList = creature:calc_distance(Empty, Food_present, []),
-    case Starv =< ?THRESHOLD of
-        true -> lists:reverse(creature:qsort(DistanceList));
-        false -> creature:qsort(creature:calc_distance(Empty, Enemy_present, []))
-    end.
-   
+
+    FoodDistanceList = creature:calc_distance(Empty, Food_present, []),
+    EnemyDistanceList = creature:calc_distance(Empty, Enemy_present, []),
+    
+    creature:qsort(creature:calc_fitness(FoodDistanceList, EnemyDistanceList, Starv)).
     % What to do when there are no food / not time to eat OR
     % when there are no enemies to evade ?.
 
