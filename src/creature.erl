@@ -1,6 +1,5 @@
 -module(creature).
 -extends(object).
--define(HUNGRY, 4).
 -export([move/4, reproduce/2, eat/4, find_way/3, calc_distance/3, qsort/1, choice/3]).
 
 %Sorterar en lista med element av följande struktur :
@@ -33,16 +32,18 @@ find_way([],_Enemy,_Res) -> [];
 find_way([PH|PT],Enemy,[]) ->
     {X1,Y1} = PH,
     {{X2,Y2}, _} = Enemy,
-    Xres = abs(X1-X2),
-    Yres = abs(Y1-Y2),
-    Distance = max(Xres, Yres),
+    %Xres = abs(X1-X2),
+    %Yres = abs(Y1-Y2),
+    %Distance = max(Xres, Yres),
+    Distance = erlang:round(math:sqrt(math:pow((X2 - X1),2) + math:pow((Y2 - Y1),
     [{{X1,Y1},Distance} | find_way(PT, Enemy, [])];
 find_way([PH|PT],Enemy,[HR|TR]) ->
     {X1,Y1} = PH,
     {{X2,Y2}, _} = Enemy,
-    Xres = abs(X1-X2),
-    Yres = abs(Y1-Y2),
-    Distance = max(Xres, Yres),
+    %Xres = abs(X1-X2),
+    %Yres = abs(Y1-Y2),
+    %Distance = max(Xres, Yres),
+    Distance = erlang:round(math:sqrt(math:pow((X2 - X1),2) + math:pow((Y2 - Y1),
     {{_X,_Y}, Old_Dis} = HR,
     case Old_Dis > Distance of
         true -> [{{X1,Y1},Distance} | find_way(PT, Enemy, TR)];
@@ -74,6 +75,7 @@ choice(State,Food,Enemies) ->
    Food_present = creature:get_of_types(View, Food),
    DistanceList = creature:calc_distance(Empty, Food_present, []),
    %io:format("Neighbours: ~p ~n, Empty ~p, View: ~p ~n Food_present: ~p ~n DistanceList: ~p ~n", [Neighbors, Empty, View, Food_present, DistanceList]),
+   
    lists:reverse(creature:qsort(DistanceList)).
    
     % What to do when there are no food / not time to eat OR
