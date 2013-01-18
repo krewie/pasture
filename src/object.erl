@@ -80,11 +80,13 @@ get_all_empty([{_Coordinate, _}|T], Acc) ->
 
 get_random([]) -> none;
 get_random(List) ->
+    random:seed(erlang:now()),
     N = length(List),
     Random = random:uniform(N),
     lists:nth(Random, List).
 
 randomize_list([]) -> [];
 randomize_list(List) ->
+    random:seed(erlang:now()),
     [X || {_, X} <- lists:sort(
                       [{random:uniform(), N} || N <- List])].

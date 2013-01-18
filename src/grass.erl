@@ -17,8 +17,8 @@ init(Coordinate) ->
 tick({Coordinate, Reproduction}) when Reproduction > ?REPRO_RATE ->
     Neighbors = grass:get_neighbours(Coordinate, 1),
     Empty = grass:get_all_empty(Neighbors),
-    %Empty_Random = grass:randomize_list(Empty),
-    Repro_Result = reproduce(Empty),
+    Empty_Random = grass:randomize_list(Empty),
+    Repro_Result = reproduce(Empty_Random),
     case Repro_Result of
         ok -> {Coordinate, 0};
         error -> {Coordinate, Reproduction+1}
