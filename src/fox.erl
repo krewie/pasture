@@ -3,12 +3,12 @@
 -define(CELL, "orange").
 -define(STARVE, 100).
 -define(REPRO_RATE, 6).
--define(HUNGER, 5).
+-define(HUNGER, 50).
 -define(REPRO_AGE, 3).
 -define(SPEED, 2).
 -define(FOOD, [rabbit]).
 -define(ENEMIES, []).
--define(SIGHT, 10).
+-define(SIGHT, 5).
 -export([init/1]).
 
 % A thought is that if we initiate them with ?REPRO_RATE then as soon

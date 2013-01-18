@@ -8,7 +8,7 @@
 -define(SPEED, 3).
 -define(FOOD, [grass]).
 -define(ENEMIES, [fox]).
--define(SIGHT, 2).
+-define(SIGHT, 4).
 -export([init/1]).
 
 % A thought is that if we initiate them with ?REPRO_RATE then as soon
