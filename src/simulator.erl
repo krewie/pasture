@@ -33,6 +33,7 @@ field(Height, Width) ->
 
 create_object(0, _Module, _Xbound, _Ybound) -> ok;
 create_object(N, Module, Xbound, Ybound) ->
+    random:seed(erlang:now()),
     RandX = random:uniform(Xbound-2)+1,
     RandY = random:uniform(Ybound-2)+1,
     io:format("Creating ~p at ~p, ~p ~n", [Module, RandX, RandY]),
